@@ -1,0 +1,14 @@
+---
+annotations:
+  tekton.dev/pipelines.minVersion: "0.41.0"
+  tekton.dev/categories: .NET
+  tekton.dev/tags: dotnet
+  tekton.dev/displayName: ".NET"
+  tekton.dev/platforms: "linux/amd64,linux/s390x,linux/ppc64le,linux/arm64"
+  artifacthub.io/maintainers: |
+      - name: Red Hat
+        email: dotnet-team@redhat.com
+  artifacthub.io/provider: Red Hat
+  artifacthub.io/recommendations: |
+      - url: https://tekton.dev/
+  artifacthub.io/category: integration-delivery
