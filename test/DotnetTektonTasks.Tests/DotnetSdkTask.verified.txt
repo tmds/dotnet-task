@@ -1,0 +1,110 @@
+﻿# Source: task-dotnet/templates/dotnet-sdk.yaml
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: dotnet-sdk
+  labels:
+    app.kubernetes.io/version: 0.1.0
+  annotations:
+    artifacthub.io/category: integration-delivery
+    artifacthub.io/maintainers: |
+      - name: Red Hat
+        email: dotnet-team@redhat.com
+    artifacthub.io/provider: Red Hat
+    artifacthub.io/recommendations: |
+      - url: https://tekton.dev/
+    tekton.dev/categories: .NET
+    tekton.dev/pipelines.minVersion: 0.41.0
+    tekton.dev/platforms: linux/amd64,linux/s390x,linux/ppc64le,linux/arm64
+    tekton.dev/tags: dotnet
+    tekton.dev/displayName: ".NET SDK"
+spec:
+  description: >-
+    dotnet-sdk task runs a user-specified script that can use the .NET SDK.
+  workspaces:  
+    - name: source
+      mountPath: /workspace/source
+      description: >-
+        An optional workspace that allows to provide source code.
+      optional: true
+    - name: dockerconfig
+      description: >-
+        An optional workspace that allows providing a .docker/config.json file to access the container registry.
+        The file should be placed at the root of the Workspace with name config.json or .dockerconfigjson.
+      optional: true
+    
+  params: 
+    - name: SCRIPT
+      description: The script to run.
+      type: string
+      default: dotnet --info
+    - name: SDK_VERSION
+      default: latest
+      description: Tag of .NET SDK imagestream.
+      type: string
+    - name: DOTNET_NAMESPACE
+      description: Namespace of the .NET imagestreams. Set to '$(context.taskRun.namespace)' to use the pipeline namespace.
+      default: openshift
+      type: string
+    - name: ENV_VARS
+      type: array
+      description: Environment variables.
+      default: []
+    
+  steps:
+    - name: dotnet
+      image: image-registry.openshift-image-registry.svc:5000/$(params.DOTNET_NAMESPACE)/dotnet:$(params.SDK_VERSION)
+      args:
+        - "--env-vars"
+        - "$(params.ENV_VARS[*])"
+      env:    
+        - name: OpenShiftInternalRegistry
+          value: "image-registry.openshift-image-registry.svc:5000"
+        - name: OpenShiftDotnetNamespace
+          value: $(params.DOTNET_NAMESPACE)
+        - name: OpenShiftCurrentNamespace
+          value: $(context.taskRun.namespace)
+        - name: RunningInTekton
+          value: "true"
+        - name: WORKSPACE_SOURCE_BOUND
+          value: $(workspaces.source.bound)
+        - name: WORKSPACE_SOURCE_PATH
+          value: $(workspaces.source.path)
+        - name: WORKSPACE_DOCKERCONFIG_BOUND
+          value: $(workspaces.dockerconfig.bound)
+        - name: WORKSPACE_DOCKERCONFIG_PATH
+          value: $(workspaces.dockerconfig.path)
+        - name: PARAM_SCRIPT
+          value: $(params.SCRIPT)
+        
+      script: |
+        #!/usr/bin/env bash
+        
+        set -euo pipefail
+        
+        parsing_flag=""
+        for arg in "$@"; do
+            if [[ "$arg" == "--env-vars" ]]; then
+                parsing_flag="env-vars"
+            elif [[ "$parsing_flag" == "env-vars" ]]; then
+                export "${arg?}"
+            fi
+        done
+        
+        if [[ "$WORKSPACE_DOCKERCONFIG_BOUND" == "true" ]]; then
+            mkdir -p ~/.config/containers
+            [[ -f "$WORKSPACE_DOCKERCONFIG_PATH/config.json" ]] && [[ -f "$WORKSPACE_DOCKERCONFIG_PATH/.dockerconfigjson" ]] && \
+                echo "error: 'dockerconfig' workspace provides multiple config files." >&2 && \
+                exit 1
+            [[ -f "$WORKSPACE_DOCKERCONFIG_PATH/config.json" ]] && ln -s "$WORKSPACE_DOCKERCONFIG_PATH/config.json" ~/.config/containers/auth.json
+            [[ -f "$WORKSPACE_DOCKERCONFIG_PATH/.dockerconfigjson" ]] && ln -s "$WORKSPACE_DOCKERCONFIG_PATH/.dockerconfigjson" ~/.config/containers/auth.json
+        fi
+        
+        if [[ "$WORKSPACE_SOURCE_BOUND" == "true" ]]; then
+            cd "$WORKSPACE_SOURCE_PATH"
+        else
+            mkdir -p ~/src
+            cd ~/src
+        fi
+        
+        eval "$PARAM_SCRIPT"

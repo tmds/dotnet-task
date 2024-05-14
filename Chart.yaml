@@ -2,3 +2,4 @@ apiVersion: v2
 name: task-dotnet
 description: Tasks for working with .NET.
 type: application
+version: 0.1.0

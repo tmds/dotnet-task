@@ -1,0 +1,19 @@
+{{- define "workspaces" -}}
+  {{- $wrkspaces := index . 1 -}}
+{{ if has "source" $wrkspaces -}}
+- name: source
+  mountPath: /workspace/source
+{{ end -}}
+{{ if has "source-optional" $wrkspaces -}}
+- name: source
+  mountPath: /workspace/source
+  description: >-
+    An optional workspace that allows to provide source code.
+  optional: true
+{{ end -}}
+- name: dockerconfig
+  description: >-
+    An optional workspace that allows providing a .docker/config.json file to access the container registry.
+    The file should be placed at the root of the Workspace with name config.json or .dockerconfigjson.
+  optional: true
+{{ end -}}
