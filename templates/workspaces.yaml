@@ -1,10 +1,10 @@
 {{- define "workspaces" -}}
-  {{- $wrkspaces := index . 1 -}}
-{{ if has "source" $wrkspaces -}}
+  {{- $workspaces := index . 1 -}}
+{{ if has "source" $workspaces -}}
 - name: source
   mountPath: /workspace/source
 {{ end -}}
-{{ if has "source-optional" $wrkspaces -}}
+{{ if has "source-optional" $workspaces -}}
 - name: source
   mountPath: /workspace/source
   description: >-

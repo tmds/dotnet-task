@@ -7,7 +7,7 @@
     "VERBOSITY"
     "BUILD_PROPS"
 }}
-{{- $wrkspaces := list
+{{- $workspaces := list
     "source"
 }}
 ---
@@ -30,7 +30,7 @@ spec:
     - name: IMAGE
       description: Fully qualified image name with digest.
   params: {{ include "params" ( list . $parameters ) | nindent 4 }}
-  workspaces:  {{ include "workspaces" ( list . $wrkspaces ) | nindent 4 }}
+  workspaces:  {{ include "workspaces" ( list . $workspaces ) | nindent 4 }}
   steps:
     - name: publish-image
       image: image-registry.openshift-image-registry.svc:5000/$(params.DOTNET_NAMESPACE)/dotnet:$(params.SDK_VERSION)
