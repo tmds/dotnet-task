@@ -15,6 +15,7 @@ if [[ "$WORKSPACE_DOCKERCONFIG_BOUND" == "true" ]]; then
     mkdir -p ~/.config/containers
     [[ -f "$WORKSPACE_DOCKERCONFIG_PATH/config.json" ]] && [[ -f "$WORKSPACE_DOCKERCONFIG_PATH/.dockerconfigjson" ]] && \
         echo "error: 'dockerconfig' workspace provides multiple config files." >&2 && \
+        echo "The config must provided using a single '.dockerconfigjson' or a single 'config.json' file." >&2 && \
         exit 1
     [[ -f "$WORKSPACE_DOCKERCONFIG_PATH/config.json" ]] && ln -s "$WORKSPACE_DOCKERCONFIG_PATH/config.json" ~/.config/containers/auth.json
     [[ -f "$WORKSPACE_DOCKERCONFIG_PATH/.dockerconfigjson" ]] && ln -s "$WORKSPACE_DOCKERCONFIG_PATH/.dockerconfigjson" ~/.config/containers/auth.json

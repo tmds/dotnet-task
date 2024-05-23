@@ -78,7 +78,7 @@ public abstract class DotnetPublishImageTaskScriptTests : TaskScriptTests
         Assert.Equal(1, runResult.ExitCode);
         string expected =
         $"""
-        Invalid BUILD_PROPS property: '{prop}'.
+        error: Invalid BUILD_PROPS property: '{prop}'.
         To assign a list of values, the values must be enclosed with double quotes. For example: MyProperty="Value1;Value2".
 
         """;

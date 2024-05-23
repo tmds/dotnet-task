@@ -118,7 +118,7 @@ spec:
             export "${arg?}"
           elif [[ "$parsing_flag" == "build-props" ]]; then
             if [[ "$arg" == *\;* ]] && [[ "$arg" != *=\"*\" ]]; then
-              echo "Invalid BUILD_PROPS property: '""$arg""'." >&2
+              echo "error: Invalid BUILD_PROPS property: '""$arg""'." >&2
               echo "To assign a list of values, the values must be enclosed with double quotes. For example: MyProperty=\"Value1;Value2\"." >&2
               exit 1
             fi
@@ -130,6 +130,7 @@ spec:
           mkdir -p ~/.config/containers
           [[ -f "$WORKSPACE_DOCKERCONFIG_PATH/config.json" ]] && [[ -f "$WORKSPACE_DOCKERCONFIG_PATH/.dockerconfigjson" ]] && \
             echo "error: 'dockerconfig' workspace provides multiple config files." >&2 && \
+            echo "The config must provided using a single '.dockerconfigjson' or a single 'config.json' file." >&2 && \
             exit 1
           [[ -f "$WORKSPACE_DOCKERCONFIG_PATH/config.json" ]] && ln -s "$WORKSPACE_DOCKERCONFIG_PATH/config.json" ~/.config/containers/auth.json
           [[ -f "$WORKSPACE_DOCKERCONFIG_PATH/.dockerconfigjson" ]] && ln -s "$WORKSPACE_DOCKERCONFIG_PATH/.dockerconfigjson" ~/.config/containers/auth.json

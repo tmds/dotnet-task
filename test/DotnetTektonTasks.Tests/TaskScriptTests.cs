@@ -109,7 +109,10 @@ public abstract class TaskScriptTests : FileCleanupBase
         if (addConfigJson && addDockerConfigJson)
         {
             Assert.Equal(1, runResult.ExitCode);
-            Assert.Equal("error: 'dockerconfig' workspace provides multiple config files.", runResult.StandardError.Trim());
+            Assert.Equal("""
+                         error: 'dockerconfig' workspace provides multiple config files.
+                         The config must provided using a single '.dockerconfigjson' or a single 'config.json' file.
+                         """, runResult.StandardError.Trim());
             Assert.Empty(runResult.StandardOutput);
         }
         else if (!addConfigJson && !addDockerConfigJson)
