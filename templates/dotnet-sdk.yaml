@@ -1,0 +1,31 @@
+{{- $env_vars := list
+}}
+{{- $parameters := list
+    "SCRIPT"
+}}
+{{- $workspaces := list
+    "source-optional"
+}}
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: dotnet-sdk
+  labels:
+    app.kubernetes.io/version: {{ .Chart.Version }}
+  annotations:
+  {{- .Values.annotations | toYaml | nindent 4 }}
+    tekton.dev/displayName: ".NET SDK"
+spec:
+  description: >-
+    dotnet-sdk task runs a user-specified script that can use the .NET SDK.
+  workspaces:  {{ include "workspaces" ( list . $workspaces ) | nindent 4 }}
+  params: {{ include "params" ( list . $parameters ) | nindent 4 }}
+  steps:
+    - name: dotnet
+      image: image-registry.openshift-image-registry.svc:5000/$(params.DOTNET_NAMESPACE)/dotnet:$(params.SDK_VERSION)
+      args:
+        - "--env-vars"
+        - "$(params.ENV_VARS[*])"
+      env:    {{ include "env" ( list . $env_vars $parameters ) | nindent 8 }}
+      script: {{ "|" }}{{ .Files.Get "scripts/dotnet-sdk.sh" | nindent 8}}

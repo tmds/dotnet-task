@@ -1,0 +1,51 @@
+{{- define "params" -}}
+  {{- $parameters := index . 1 -}}
+{{ if has "SCRIPT" $parameters -}}
+- name: SCRIPT
+  description: The script to run.
+  type: string
+  default: dotnet --info
+{{ end -}}
+{{ if has "PROJECT" $parameters -}}
+- name: PROJECT
+  description: Path of the .NET project file.
+  type: string
+{{ end -}}
+{{ if has "IMAGE_NAME" $parameters -}}
+- name: IMAGE_NAME
+  description: |
+    Name of the image repository to push. When it does not include a registry, it is pushed to the internal cluster registry.
+    If no namespace is included, the current namespace is prepended to the name.
+  type: string
+{{ end -}}
+- name: SDK_VERSION
+  default: latest
+  description: Tag of .NET SDK imagestream.
+  type: string
+- name: DOTNET_NAMESPACE
+  description: Namespace of the .NET imagestreams. Set to '$(context.taskRun.namespace)' to use the pipeline namespace.
+  default: openshift
+  type: string
+{{ if has "USE_DOTNET_IMAGESTREAM_BASE_IMAGES" $parameters -}}
+- name: USE_DOTNET_IMAGESTREAM_BASE_IMAGES
+  description: Set to 'true' to build the application image using .NET imagestream base images.
+  default: "true"
+  type: string
+{{ end -}}
+{{ if has "VERBOSITY" $parameters -}}
+- name: VERBOSITY
+  description: MSBuild verbosity level. Allowed values are 'q[uiet]', 'm[inimal]', 'n[ormal]', 'd[etailed]', and 'diag[nostic]'.
+  default: "minimal"
+  type: string
+{{ end -}}
+{{ if has "BUILD_PROPS" $parameters -}}
+- name: BUILD_PROPS
+  type: array
+  description: MSBuild properties to pass to the publish command.
+  default: []
+{{ end -}}
+- name: ENV_VARS
+  type: array
+  description: Environment variables.
+  default: []
+{{ end -}}

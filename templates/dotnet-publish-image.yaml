@@ -1,0 +1,43 @@
+{{- $env_vars := list
+}}
+{{- $parameters := list
+    "PROJECT"
+    "IMAGE_NAME"
+    "USE_DOTNET_IMAGESTREAM_BASE_IMAGES"
+    "VERBOSITY"
+    "BUILD_PROPS"
+}}
+{{- $workspaces := list
+    "source"
+}}
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: dotnet-publish-image
+  labels:
+    app.kubernetes.io/version: {{ .Chart.Version }}
+  annotations:
+  {{- .Values.annotations | toYaml | nindent 4 }}
+    tekton.dev/displayName: "dotnet publish image"
+spec:
+  description: >-
+    dotnet-publish-image task builds a container image from a .NET project
+    and pushes it to a container registry.
+  results:
+    - name: IMAGE_DIGEST
+      description: Digest of the image.
+    - name: IMAGE
+      description: Fully qualified image name with digest.
+  params: {{ include "params" ( list . $parameters ) | nindent 4 }}
+  workspaces:  {{ include "workspaces" ( list . $workspaces ) | nindent 4 }}
+  steps:
+    - name: publish-image
+      image: image-registry.openshift-image-registry.svc:5000/$(params.DOTNET_NAMESPACE)/dotnet:$(params.SDK_VERSION)
+      args:
+        - "--env-vars"
+        - "$(params.ENV_VARS[*])"
+        - "--build-props"
+        - "$(params.BUILD_PROPS[*])"
+      env:    {{ include "env" ( list . $env_vars $parameters ) | nindent 8 }}
+      script: {{ "|" }}{{ .Files.Get "scripts/dotnet-publish.sh" | nindent 8}}
