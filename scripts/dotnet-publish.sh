@@ -38,13 +38,13 @@ fi
 
 # Support short names for pushing to the internal registry.
 IMAGE_NAME="$PARAM_IMAGE_NAME"
-# If the name includes no repository, use the OpenShift internal repository.
+# If the name includes no repository, use the DotnetImageRegistry repository.
 if [[ "${IMAGE_NAME%%/*}" != *.* ]]; then
   # If the name has no path component, use the current namespace.
   if [[ "$IMAGE_NAME" != */* ]]; then
-  IMAGE_NAME="$OpenShiftCurrentNamespace/$IMAGE_NAME"
+    IMAGE_NAME="$CurrentKubernetesNamespace/$IMAGE_NAME"
   fi
-  IMAGE_NAME="$OpenShiftInternalRegistry/$IMAGE_NAME"
+  IMAGE_NAME="$DotnetImageRegistry/$IMAGE_NAME"
 fi
 
 # Determine properties used by the .NET SDK container tooling.
@@ -58,12 +58,12 @@ if [[ "$ContainerRepository" == *:* ]]; then
   ContainerRepository="${ContainerRepository%:*}"
 fi
 
-if [[ "$PARAM_USE_DOTNET_IMAGESTREAM_BASE_IMAGES" == "true" ]]; then
-cat >/tmp/UseDotnetImageStreamBaseImages.targets <<'EOF'
+if [[ "$PARAM_USE_DOTNET_BASE_IMAGES" == "true" ]]; then
+cat >/tmp/UseDotnetBaseImages.targets <<'EOF'
 <Project>
-  <Target Name="ComputeOpenShiftContainerBaseImage" BeforeTargets="ComputeContainerBaseImage">
+  <Target Name="ComputeKubernetesDotnetBaseImage" BeforeTargets="ComputeContainerBaseImage">
     <PropertyGroup>
-      <ContainerBaseImage>$(OpenShiftInternalRegistry)/$(OpenShiftDotnetNamespace)/dotnet-runtime:$(_TargetFrameworkVersionWithoutV)</ContainerBaseImage>
+      <ContainerBaseImage>$(DotnetImageRegistry)/$(DotnetImageNamespace)/dotnet-runtime:$(_TargetFrameworkVersionWithoutV)</ContainerBaseImage>
     </PropertyGroup>
   </Target>
 </Project>
@@ -75,8 +75,8 @@ PUBLISH_ARGS+=( "${PARAM_BUILD_PROPS[@]/#/-p:}" )
 PUBLISH_ARGS+=( "--getProperty:GeneratedContainerDigest" "--getResultOutputFile:/tmp/IMAGE_DIGEST" )
 PUBLISH_ARGS+=( "-v" "$PARAM_VERBOSITY" )
 PUBLISH_ARGS+=( "-p:ContainerRegistry=$ContainerRegistry" "-p:ContainerRepository=$ContainerRepository" -p:ContainerImageTag= "-p:ContainerImageTags=$ContainerImageTag" )
-if [[ "$PARAM_USE_DOTNET_IMAGESTREAM_BASE_IMAGES" == "true" ]]; then
-  PUBLISH_ARGS+=( "-p:CustomBeforeDirectoryBuildProps=/tmp/UseDotnetImageStreamBaseImages.targets" )
+if [[ "$PARAM_USE_DOTNET_BASE_IMAGES" == "true" ]]; then
+  PUBLISH_ARGS+=( "-p:CustomBeforeDirectoryBuildProps=/tmp/UseDotnetBaseImages.targets" )
 fi
 PUBLISH_ARGS+=( "/t:PublishContainer" )
 PUBLISH_ARGS+=( "$PARAM_PROJECT" )

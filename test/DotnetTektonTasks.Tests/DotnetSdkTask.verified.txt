@@ -39,29 +39,33 @@ spec:
       default: dotnet --info
     - name: SDK_VERSION
       default: latest
-      description: Tag of .NET SDK imagestream.
+      description: Tag of .NET SDK image.
       type: string
     - name: DOTNET_NAMESPACE
-      description: Namespace of the .NET imagestreams. Set to '$(context.taskRun.namespace)' to use the pipeline namespace.
+      description: Namespace of the .NET images. Set to '$(context.taskRun.namespace)' to use the pipeline namespace.
       default: openshift
       type: string
     - name: ENV_VARS
       type: array
       description: Environment variables.
       default: []
+    - name: DOTNET_REGISTRY
+      description: Registry of the .NET images.
+      default: image-registry.openshift-image-registry.svc:5000
+      type: string
     
   steps:
     - name: dotnet
-      image: image-registry.openshift-image-registry.svc:5000/$(params.DOTNET_NAMESPACE)/dotnet:$(params.SDK_VERSION)
+      image: $(params.DOTNET_REGISTRY)/$(params.DOTNET_NAMESPACE)/dotnet:$(params.SDK_VERSION)
       args:
         - "--env-vars"
         - "$(params.ENV_VARS[*])"
       env:    
-        - name: OpenShiftInternalRegistry
-          value: "image-registry.openshift-image-registry.svc:5000"
-        - name: OpenShiftDotnetNamespace
+        - name: DotnetImageRegistry
+          value: "$(params.DOTNET_REGISTRY)"
+        - name: DotnetImageNamespace
           value: $(params.DOTNET_NAMESPACE)
-        - name: OpenShiftCurrentNamespace
+        - name: CurrentKubernetesNamespace
           value: $(context.taskRun.namespace)
         - name: RunningInTekton
           value: "true"

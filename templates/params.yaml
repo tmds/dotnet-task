@@ -20,15 +20,15 @@
 {{ end -}}
 - name: SDK_VERSION
   default: latest
-  description: Tag of .NET SDK imagestream.
+  description: Tag of .NET SDK image.
   type: string
 - name: DOTNET_NAMESPACE
-  description: Namespace of the .NET imagestreams. Set to '$(context.taskRun.namespace)' to use the pipeline namespace.
+  description: Namespace of the .NET images. Set to '$(context.taskRun.namespace)' to use the pipeline namespace.
   default: openshift
   type: string
-{{ if has "USE_DOTNET_IMAGESTREAM_BASE_IMAGES" $parameters -}}
-- name: USE_DOTNET_IMAGESTREAM_BASE_IMAGES
-  description: Set to 'true' to build the application image using .NET imagestream base images.
+{{ if has "USE_DOTNET_BASE_IMAGES" $parameters -}}
+- name: USE_DOTNET_BASE_IMAGES
+  description: Set to 'true' to build the application image using DOTNET_NAMESPACE image base images.
   default: "true"
   type: string
 {{ end -}}
@@ -48,4 +48,8 @@
   type: array
   description: Environment variables.
   default: []
+- name: DOTNET_REGISTRY
+  description: Registry of the .NET images.
+  default: image-registry.openshift-image-registry.svc:5000
+  type: string
 {{ end -}}
