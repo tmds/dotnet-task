@@ -6,7 +6,7 @@ public abstract class DotnetPublishImageTaskScriptTests : TaskScriptTests
 {
     // Paths used by the script implementation.
     private const string ImageDigestPath = "/tmp/IMAGE_DIGEST";
-    private const string UseDotnetImageStreamBaseImagesPath = "/tmp/UseDotnetImageStreamBaseImages.targets";
+    private const string UseDotnetBaseImagesPath = "/tmp/UseDotnetBaseImages.targets";
 
     private const string WriteImageDigest = $"echo 'sha256:deadbeef' >{ImageDigestPath}";
 
@@ -141,15 +141,15 @@ public abstract class DotnetPublishImageTaskScriptTests : TaskScriptTests
         string[] publishCommandArgs = GetPublishCommandArgs(
             envvars: new()
             {
-                { "PARAM_USE_DOTNET_IMAGESTREAM_BASE_IMAGES", value}
+                { "PARAM_USE_DOTNET_BASE_IMAGES", value}
             });
         
         bool expectCustomBeforeDirectoryBuildProps = value == "true";
 
-        Assert.Equal(expectCustomBeforeDirectoryBuildProps, publishCommandArgs.Contains($"-p:CustomBeforeDirectoryBuildProps={UseDotnetImageStreamBaseImagesPath}"));
+        Assert.Equal(expectCustomBeforeDirectoryBuildProps, publishCommandArgs.Contains($"-p:CustomBeforeDirectoryBuildProps={UseDotnetBaseImagesPath}"));
     }
 
-    // [Fact] // depends on SDK support for getResultOutputFile
+    [Fact]
     public void UseDotnetImageStreamBaseImagesSetsContainerBaseImage()
     {
         string dotnetNamespace = "dotnet-namespace";
@@ -160,8 +160,8 @@ public abstract class DotnetPublishImageTaskScriptTests : TaskScriptTests
         var runResult = RunTask(
             new()
             {
-                { "PARAM_USE_DOTNET_IMAGESTREAM_BASE_IMAGES", "true"},
-                { "OpenShiftDotnetNamespace", dotnetNamespace}
+                { "PARAM_USE_DOTNET_BASE_IMAGES", "true"},
+                { "DotnetImageNamespace", dotnetNamespace}
             },
             dotnetStubScript:
             $"""
@@ -169,7 +169,7 @@ public abstract class DotnetPublishImageTaskScriptTests : TaskScriptTests
             set -e
             alias dotnet="/usr/bin/dotnet"
             dotnet new web -o /tmp/web
-            dotnet publish /t:ComputeContainerBaseImage -p:CustomBeforeDirectoryBuildProps={UseDotnetImageStreamBaseImagesPath} --getProperty:ContainerBaseImage /tmp/web --getResultOutputFile:{baseImageFile}
+            dotnet publish /t:ComputeContainerBaseImage -p:CustomBeforeDirectoryBuildProps={UseDotnetBaseImagesPath} --getProperty:ContainerBaseImage /tmp/web --getResultOutputFile:{baseImageFile}
             {WriteImageDigest}
             """,
             homeDirectory: homeDirectory);
@@ -177,7 +177,7 @@ public abstract class DotnetPublishImageTaskScriptTests : TaskScriptTests
         Assert.Equal(0, runResult.ExitCode);
 
         Assert.True(File.Exists(baseImageFile));
-        Assert.Equal($"{OpenShiftInternalRegistry}/{dotnetNamespace}/dotnet-runtime:{DotnetVersion}", File.ReadAllText(baseImageFile).Trim());
+        Assert.Equal($"{TestImageRegistry}/{dotnetNamespace}/dotnet-runtime:{DotnetVersion}", File.ReadAllText(baseImageFile).Trim());
     }
 
     public static IEnumerable<object[]> ParamImageNameData
@@ -190,13 +190,13 @@ public abstract class DotnetPublishImageTaskScriptTests : TaskScriptTests
                 string expectedTags = tag.Length > 0 ? tag : "latest";
 
                 // no name specified.
-                yield return new object[] { $"{tagSuffix}", new string[] { $"-p:ContainerRegistry={OpenShiftInternalRegistry}", $"-p:ContainerRepository={TestCurrentNamespace}/", "-p:ContainerImageTag=", $"-p:ContainerImageTags={expectedTags}" } };
+                yield return new object[] { $"{tagSuffix}", new string[] { $"-p:ContainerRegistry={TestImageRegistry}", $"-p:ContainerRepository={TestCurrentNamespace}/", "-p:ContainerImageTag=", $"-p:ContainerImageTags={expectedTags}" } };
 
                 string name = "image-name";
-                yield return new object[] { $"{name}{tagSuffix}", new string[] { $"-p:ContainerRegistry={OpenShiftInternalRegistry}", $"-p:ContainerRepository={TestCurrentNamespace}/{name}", "-p:ContainerImageTag=", $"-p:ContainerImageTags={expectedTags}" } };
+                yield return new object[] { $"{name}{tagSuffix}", new string[] { $"-p:ContainerRegistry={TestImageRegistry}", $"-p:ContainerRepository={TestCurrentNamespace}/{name}", "-p:ContainerImageTag=", $"-p:ContainerImageTags={expectedTags}" } };
 
                 string @namespace = "other-namespace";
-                yield return new object[] { $"{@namespace}/{name}{tagSuffix}", new string[] { $"-p:ContainerRegistry={OpenShiftInternalRegistry}", $"-p:ContainerRepository={@namespace}/{name}", "-p:ContainerImageTag=", $"-p:ContainerImageTags={expectedTags}" } };
+                yield return new object[] { $"{@namespace}/{name}{tagSuffix}", new string[] { $"-p:ContainerRegistry={TestImageRegistry}", $"-p:ContainerRepository={@namespace}/{name}", "-p:ContainerImageTag=", $"-p:ContainerImageTags={expectedTags}" } };
 
                 string registry = "my-registry.com";
                 yield return new object[] { $"{registry}/{@namespace}/{name}{tagSuffix}", new string[] { $"-p:ContainerRegistry={registry}", $"-p:ContainerRepository={@namespace}/{name}", "-p:ContainerImageTag=", $"-p:ContainerImageTags={expectedTags}" } };
@@ -213,7 +213,7 @@ public abstract class DotnetPublishImageTaskScriptTests : TaskScriptTests
             "publish",
             "--getProperty:GeneratedContainerDigest", $"--getResultOutputFile:{ImageDigestPath}",
             "-v", "",
-            $"-p:ContainerRegistry={OpenShiftInternalRegistry}", $"-p:ContainerRepository={TestCurrentNamespace}/", "-p:ContainerImageTag=", "-p:ContainerImageTags=latest",
+            $"-p:ContainerRegistry={TestImageRegistry}", $"-p:ContainerRepository={TestCurrentNamespace}/", "-p:ContainerImageTag=", "-p:ContainerImageTags=latest",
             "/t:PublishContainer",
             ""
         ];
@@ -265,8 +265,9 @@ public abstract class DotnetPublishImageTaskScriptTests : TaskScriptTests
 [Collection(nameof(TektonTaskTestCollection))]
 public class DotnetPublishImageTaskScriptTestsNet8 : DotnetPublishImageTaskScriptTests
 {
-    protected override string SdkImage => "registry.access.redhat.com/ubi8/dotnet-80:latest";
-    protected override string DotnetVersion => "8.0";
+    // TODO: update with released 9.0 image.
+    protected override string SdkImage => "quay.io/tmds/dotnet:9.0-ci";
+    protected override string DotnetVersion => "9.0";
 
     public DotnetPublishImageTaskScriptTestsNet8(DotnetTektonTasks tektonTasks)
       : base(tektonTasks)

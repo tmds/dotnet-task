@@ -23,7 +23,7 @@ spec:
   params: {{ include "params" ( list . $parameters ) | nindent 4 }}
   steps:
     - name: dotnet
-      image: image-registry.openshift-image-registry.svc:5000/$(params.DOTNET_NAMESPACE)/dotnet:$(params.SDK_VERSION)
+      image: $(params.DOTNET_REGISTRY)/$(params.DOTNET_NAMESPACE)/dotnet:$(params.SDK_VERSION)
       args:
         - "--env-vars"
         - "$(params.ENV_VARS[*])"

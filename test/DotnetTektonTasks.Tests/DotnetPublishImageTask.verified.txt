@@ -37,14 +37,14 @@ spec:
       type: string
     - name: SDK_VERSION
       default: latest
-      description: Tag of .NET SDK imagestream.
+      description: Tag of .NET SDK image.
       type: string
     - name: DOTNET_NAMESPACE
-      description: Namespace of the .NET imagestreams. Set to '$(context.taskRun.namespace)' to use the pipeline namespace.
+      description: Namespace of the .NET images. Set to '$(context.taskRun.namespace)' to use the pipeline namespace.
       default: openshift
       type: string
-    - name: USE_DOTNET_IMAGESTREAM_BASE_IMAGES
-      description: Set to 'true' to build the application image using .NET imagestream base images.
+    - name: USE_DOTNET_BASE_IMAGES
+      description: Set to 'true' to build the application image using DOTNET_NAMESPACE image base images.
       default: "true"
       type: string
     - name: VERBOSITY
@@ -59,6 +59,10 @@ spec:
       type: array
       description: Environment variables.
       default: []
+    - name: DOTNET_REGISTRY
+      description: Registry of the .NET images.
+      default: image-registry.openshift-image-registry.svc:5000
+      type: string
     
   workspaces:  
     - name: source
@@ -71,18 +75,18 @@ spec:
     
   steps:
     - name: publish-image
-      image: image-registry.openshift-image-registry.svc:5000/$(params.DOTNET_NAMESPACE)/dotnet:$(params.SDK_VERSION)
+      image: $(params.DOTNET_REGISTRY)/$(params.DOTNET_NAMESPACE)/dotnet:$(params.SDK_VERSION)
       args:
         - "--env-vars"
         - "$(params.ENV_VARS[*])"
         - "--build-props"
         - "$(params.BUILD_PROPS[*])"
       env:    
-        - name: OpenShiftInternalRegistry
-          value: "image-registry.openshift-image-registry.svc:5000"
-        - name: OpenShiftDotnetNamespace
+        - name: DotnetImageRegistry
+          value: "$(params.DOTNET_REGISTRY)"
+        - name: DotnetImageNamespace
           value: $(params.DOTNET_NAMESPACE)
-        - name: OpenShiftCurrentNamespace
+        - name: CurrentKubernetesNamespace
           value: $(context.taskRun.namespace)
         - name: RunningInTekton
           value: "true"
@@ -98,8 +102,8 @@ spec:
           value: $(params.PROJECT)
         - name: PARAM_IMAGE_NAME
           value: $(params.IMAGE_NAME)
-        - name: PARAM_USE_DOTNET_IMAGESTREAM_BASE_IMAGES
-          value: $(params.USE_DOTNET_IMAGESTREAM_BASE_IMAGES)
+        - name: PARAM_USE_DOTNET_BASE_IMAGES
+          value: $(params.USE_DOTNET_BASE_IMAGES)
         - name: PARAM_VERBOSITY
           value: $(params.VERBOSITY)
         
@@ -144,13 +148,13 @@ spec:
         
         # Support short names for pushing to the internal registry.
         IMAGE_NAME="$PARAM_IMAGE_NAME"
-        # If the name includes no repository, use the OpenShift internal repository.
+        # If the name includes no repository, use the DotnetImageRegistry repository.
         if [[ "${IMAGE_NAME%%/*}" != *.* ]]; then
           # If the name has no path component, use the current namespace.
           if [[ "$IMAGE_NAME" != */* ]]; then
-          IMAGE_NAME="$OpenShiftCurrentNamespace/$IMAGE_NAME"
+            IMAGE_NAME="$CurrentKubernetesNamespace/$IMAGE_NAME"
           fi
-          IMAGE_NAME="$OpenShiftInternalRegistry/$IMAGE_NAME"
+          IMAGE_NAME="$DotnetImageRegistry/$IMAGE_NAME"
         fi
         
         # Determine properties used by the .NET SDK container tooling.
@@ -164,12 +168,12 @@ spec:
           ContainerRepository="${ContainerRepository%:*}"
         fi
         
-        if [[ "$PARAM_USE_DOTNET_IMAGESTREAM_BASE_IMAGES" == "true" ]]; then
-        cat >/tmp/UseDotnetImageStreamBaseImages.targets <<'EOF'
+        if [[ "$PARAM_USE_DOTNET_BASE_IMAGES" == "true" ]]; then
+        cat >/tmp/UseDotnetBaseImages.targets <<'EOF'
         <Project>
-          <Target Name="ComputeOpenShiftContainerBaseImage" BeforeTargets="ComputeContainerBaseImage">
+          <Target Name="ComputeKubernetesDotnetBaseImage" BeforeTargets="ComputeContainerBaseImage">
             <PropertyGroup>
-              <ContainerBaseImage>$(OpenShiftInternalRegistry)/$(OpenShiftDotnetNamespace)/dotnet-runtime:$(_TargetFrameworkVersionWithoutV)</ContainerBaseImage>
+              <ContainerBaseImage>$(DotnetImageRegistry)/$(DotnetImageNamespace)/dotnet-runtime:$(_TargetFrameworkVersionWithoutV)</ContainerBaseImage>
             </PropertyGroup>
           </Target>
         </Project>
@@ -181,8 +185,8 @@ spec:
         PUBLISH_ARGS+=( "--getProperty:GeneratedContainerDigest" "--getResultOutputFile:/tmp/IMAGE_DIGEST" )
         PUBLISH_ARGS+=( "-v" "$PARAM_VERBOSITY" )
         PUBLISH_ARGS+=( "-p:ContainerRegistry=$ContainerRegistry" "-p:ContainerRepository=$ContainerRepository" -p:ContainerImageTag= "-p:ContainerImageTags=$ContainerImageTag" )
-        if [[ "$PARAM_USE_DOTNET_IMAGESTREAM_BASE_IMAGES" == "true" ]]; then
-          PUBLISH_ARGS+=( "-p:CustomBeforeDirectoryBuildProps=/tmp/UseDotnetImageStreamBaseImages.targets" )
+        if [[ "$PARAM_USE_DOTNET_BASE_IMAGES" == "true" ]]; then
+          PUBLISH_ARGS+=( "-p:CustomBeforeDirectoryBuildProps=/tmp/UseDotnetBaseImages.targets" )
         fi
         PUBLISH_ARGS+=( "/t:PublishContainer" )
         PUBLISH_ARGS+=( "$PARAM_PROJECT" )

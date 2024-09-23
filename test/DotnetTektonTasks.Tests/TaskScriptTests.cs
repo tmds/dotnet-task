@@ -16,7 +16,7 @@ public abstract class TaskScriptTests : FileCleanupBase
     protected YamlNode Yaml => _tektonTasks.GetTektonTask(_taskName).Yaml;
 
     protected const string TestCurrentNamespace ="test-namespace";
-    protected const string OpenShiftInternalRegistry = "image-registry.openshift-image-registry.svc:5000";
+    protected const string TestImageRegistry = "test-image-registry.svc:5000";
 
     protected TaskScriptTests(DotnetTektonTasks tektonTasks, string taskName)
     {
@@ -190,10 +190,10 @@ public abstract class TaskScriptTests : FileCleanupBase
             string envvarName = (string)envvar["name"]!;
             switch (envvarName)
             {
-                case "OpenShiftInternalRegistry":
-                    envvarArgs.Add($"{envvarName}={OpenShiftInternalRegistry}");
+                case "DotnetImageRegistry":
+                    envvarArgs.Add($"{envvarName}={TestImageRegistry}");
                     break;
-                case "OpenShiftCurrentNamespace":
+                case "CurrentKubernetesNamespace":
                     envvarArgs.Add($"{envvarName}={TestCurrentNamespace}");
                     break;
                 default:
