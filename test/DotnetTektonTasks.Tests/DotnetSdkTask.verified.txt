@@ -112,3 +112,6 @@ spec:
         fi
         
         eval "$PARAM_SCRIPT"
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532

@@ -197,3 +197,7 @@ spec:
         
         printf "%s" "$RESULT_IMAGE_DIGEST" >/tekton/results/IMAGE_DIGEST
         printf "%s" "$RESULT_IMAGE" >/tekton/results/IMAGE
+        
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
