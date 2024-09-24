@@ -29,3 +29,6 @@ spec:
         - "$(params.ENV_VARS[*])"
       env:    {{ include "env" ( list . $env_vars $parameters ) | nindent 8 }}
       script: {{ "|" }}{{ .Files.Get "scripts/dotnet-sdk.sh" | nindent 8}}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
