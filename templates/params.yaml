@@ -14,7 +14,7 @@
 {{ if has "IMAGE_NAME" $parameters -}}
 - name: IMAGE_NAME
   description: |
-    Name of the image repository to push. When it does not include a registry, it is pushed to the internal cluster registry.
+    Name of the image repository to push. When it does not include a registry, it is pushed to the 'REGISTRY' parameter.
     If no namespace is included, the current namespace is prepended to the name.
   type: string
 {{ end -}}
@@ -48,7 +48,7 @@
   type: array
   description: Environment variables.
   default: []
-- name: DOTNET_REGISTRY
+- name: REGISTRY
   description: Registry of the .NET images.
   default: image-registry.openshift-image-registry.svc:5000
   type: string

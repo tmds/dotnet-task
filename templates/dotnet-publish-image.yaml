@@ -33,7 +33,7 @@ spec:
   workspaces:  {{ include "workspaces" ( list . $workspaces ) | nindent 4 }}
   steps:
     - name: publish-image
-      image: $(params.DOTNET_REGISTRY)/$(params.DOTNET_NAMESPACE)/dotnet:$(params.SDK_VERSION)
+      image: $(params.REGISTRY)/$(params.DOTNET_NAMESPACE)/dotnet:$(params.SDK_VERSION)
       args:
         - "--env-vars"
         - "$(params.ENV_VARS[*])"

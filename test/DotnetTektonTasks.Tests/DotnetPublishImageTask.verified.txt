@@ -32,7 +32,7 @@ spec:
       type: string
     - name: IMAGE_NAME
       description: |
-        Name of the image repository to push. When it does not include a registry, it is pushed to the internal cluster registry.
+        Name of the image repository to push. When it does not include a registry, it is pushed to the 'REGISTRY' parameter.
         If no namespace is included, the current namespace is prepended to the name.
       type: string
     - name: SDK_VERSION
@@ -59,7 +59,7 @@ spec:
       type: array
       description: Environment variables.
       default: []
-    - name: DOTNET_REGISTRY
+    - name: REGISTRY
       description: Registry of the .NET images.
       default: image-registry.openshift-image-registry.svc:5000
       type: string
@@ -75,15 +75,15 @@ spec:
     
   steps:
     - name: publish-image
-      image: $(params.DOTNET_REGISTRY)/$(params.DOTNET_NAMESPACE)/dotnet:$(params.SDK_VERSION)
+      image: $(params.REGISTRY)/$(params.DOTNET_NAMESPACE)/dotnet:$(params.SDK_VERSION)
       args:
         - "--env-vars"
         - "$(params.ENV_VARS[*])"
         - "--build-props"
         - "$(params.BUILD_PROPS[*])"
       env:    
-        - name: DotnetImageRegistry
-          value: "$(params.DOTNET_REGISTRY)"
+        - name: ImageRegistry
+          value: "$(params.REGISTRY)"
         - name: DotnetImageNamespace
           value: $(params.DOTNET_NAMESPACE)
         - name: CurrentKubernetesNamespace
@@ -148,13 +148,13 @@ spec:
         
         # Support short names for pushing to the internal registry.
         IMAGE_NAME="$PARAM_IMAGE_NAME"
-        # If the name includes no repository, use the DotnetImageRegistry repository.
+        # If the name includes no repository, use the ImageRegistry repository.
         if [[ "${IMAGE_NAME%%/*}" != *.* ]]; then
           # If the name has no path component, use the current namespace.
           if [[ "$IMAGE_NAME" != */* ]]; then
             IMAGE_NAME="$CurrentKubernetesNamespace/$IMAGE_NAME"
           fi
-          IMAGE_NAME="$DotnetImageRegistry/$IMAGE_NAME"
+          IMAGE_NAME="$ImageRegistry/$IMAGE_NAME"
         fi
         
         # Determine properties used by the .NET SDK container tooling.
@@ -173,7 +173,7 @@ spec:
         <Project>
           <Target Name="ComputeKubernetesDotnetBaseImage" BeforeTargets="ComputeContainerBaseImage">
             <PropertyGroup>
-              <ContainerBaseImage>$(DotnetImageRegistry)/$(DotnetImageNamespace)/dotnet-runtime:$(_TargetFrameworkVersionWithoutV)</ContainerBaseImage>
+              <ContainerBaseImage>$(ImageRegistry)/$(DotnetImageNamespace)/dotnet-runtime:$(_TargetFrameworkVersionWithoutV)</ContainerBaseImage>
             </PropertyGroup>
           </Target>
         </Project>

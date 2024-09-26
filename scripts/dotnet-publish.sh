@@ -38,13 +38,13 @@ fi
 
 # Support short names for pushing to the internal registry.
 IMAGE_NAME="$PARAM_IMAGE_NAME"
-# If the name includes no repository, use the DotnetImageRegistry repository.
+# If the name includes no repository, use the ImageRegistry repository.
 if [[ "${IMAGE_NAME%%/*}" != *.* ]]; then
   # If the name has no path component, use the current namespace.
   if [[ "$IMAGE_NAME" != */* ]]; then
     IMAGE_NAME="$CurrentKubernetesNamespace/$IMAGE_NAME"
   fi
-  IMAGE_NAME="$DotnetImageRegistry/$IMAGE_NAME"
+  IMAGE_NAME="$ImageRegistry/$IMAGE_NAME"
 fi
 
 # Determine properties used by the .NET SDK container tooling.
@@ -63,7 +63,7 @@ cat >/tmp/UseDotnetBaseImages.targets <<'EOF'
 <Project>
   <Target Name="ComputeKubernetesDotnetBaseImage" BeforeTargets="ComputeContainerBaseImage">
     <PropertyGroup>
-      <ContainerBaseImage>$(DotnetImageRegistry)/$(DotnetImageNamespace)/dotnet-runtime:$(_TargetFrameworkVersionWithoutV)</ContainerBaseImage>
+      <ContainerBaseImage>$(ImageRegistry)/$(DotnetImageNamespace)/dotnet-runtime:$(_TargetFrameworkVersionWithoutV)</ContainerBaseImage>
     </PropertyGroup>
   </Target>
 </Project>

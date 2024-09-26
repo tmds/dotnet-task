@@ -49,20 +49,20 @@ spec:
       type: array
       description: Environment variables.
       default: []
-    - name: DOTNET_REGISTRY
+    - name: REGISTRY
       description: Registry of the .NET images.
       default: image-registry.openshift-image-registry.svc:5000
       type: string
     
   steps:
     - name: dotnet
-      image: $(params.DOTNET_REGISTRY)/$(params.DOTNET_NAMESPACE)/dotnet:$(params.SDK_VERSION)
+      image: $(params.REGISTRY)/$(params.DOTNET_NAMESPACE)/dotnet:$(params.SDK_VERSION)
       args:
         - "--env-vars"
         - "$(params.ENV_VARS[*])"
       env:    
-        - name: DotnetImageRegistry
-          value: "$(params.DOTNET_REGISTRY)"
+        - name: ImageRegistry
+          value: "$(params.REGISTRY)"
         - name: DotnetImageNamespace
           value: $(params.DOTNET_NAMESPACE)
         - name: CurrentKubernetesNamespace
