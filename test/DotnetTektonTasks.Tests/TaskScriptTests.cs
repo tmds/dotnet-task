@@ -190,7 +190,7 @@ public abstract class TaskScriptTests : FileCleanupBase
             string envvarName = (string)envvar["name"]!;
             switch (envvarName)
             {
-                case "DotnetImageRegistry":
+                case "ImageRegistry":
                     envvarArgs.Add($"{envvarName}={TestImageRegistry}");
                     break;
                 case "CurrentKubernetesNamespace":
