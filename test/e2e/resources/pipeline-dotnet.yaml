@@ -1,0 +1,63 @@
+---
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  labels:
+    name: dotnet-pipeline
+  name: dotnet-pipeline
+spec:
+  workspaces:
+    - name: source
+      optional: false
+  params:
+    - name: URL
+      type: string
+    - name: REVISION
+      type: string
+    - name: PROJECT
+      type: string
+    - name: IMAGE_NAME
+      type: string
+    - name: DOTNET_NAMESPACE
+      type: string
+    - name: REGISTRY
+      type: string
+  tasks:
+    - name: git-clone
+      taskRef:
+        resolver: git
+        params:
+          - name: url
+            value: https://github.com/openshift-pipelines/tektoncd-catalog
+          - name: revision
+            value: p
+          - name: pathInRepo
+            value: tasks/task-git-clone/0.3.0/task-git-clone.yaml
+      workspaces:
+        - name: output
+          workspace: source
+      params:
+        - name: URL
+          value: "$(params.URL)"
+        - name: REVISION
+          value: "$(params.REVISION)"
+    - name: dotnet-publish
+      taskRef:
+        name: dotnet-publish-image
+      params:
+        - name: PROJECT
+          value: "$(params.PROJECT)"
+        - name: IMAGE_NAME
+          value: "$(params.IMAGE_NAME)"
+        - name: DOTNET_NAMESPACE
+          value: "$(params.DOTNET_NAMESPACE)"
+        - name: REGISTRY
+          value: "$(params.REGISTRY)"
+        - name: ENV_VARS
+          value:
+            - "DOTNET_CONTAINER_INSECURE_REGISTRIES=$(params.REGISTRY)"
+      runAfter:
+        - git-clone
+      workspaces:
+        - name: source
+          workspace: source
