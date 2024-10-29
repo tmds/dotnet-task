@@ -27,25 +27,24 @@ spec:
     - name: IMAGE
       description: Fully qualified image name with digest.
   params: 
+    - name: SDK_IMAGE
+      description: Fully qualified name of the SDK image.
+      default: image-registry.openshift-image-registry.svc:5000/openshift/dotnet:latest
+      type: string
     - name: PROJECT
-      description: Path of the .NET project file.
+      description: Path of the .NET project file in the source workspace.
       type: string
     - name: IMAGE_NAME
       description: |
-        Name of the image repository to push. When it does not include a registry, it is pushed to the 'REGISTRY' parameter.
-        If no namespace is included, the current namespace is prepended to the name.
+        Name of the application image repository to push to.
+        When the name does not include a registry, the 'SDK_IMAGE' registry is used.
+        When no namespace is included, the current Kubernetes namespace is used.
       type: string
-    - name: SDK_VERSION
-      default: latest
-      description: Tag of .NET SDK image.
-      type: string
-    - name: DOTNET_NAMESPACE
-      description: Namespace of the .NET images. Set to '$(context.taskRun.namespace)' to use the pipeline namespace.
-      default: openshift
-      type: string
-    - name: USE_DOTNET_BASE_IMAGES
-      description: Set to 'true' to build the application image using DOTNET_NAMESPACE image base images.
-      default: "true"
+    - name: BASE_IMAGE
+      description: |
+        When set, overrides the base image used for the application image.
+        When the name does not include a registry, the 'SDK_IMAGE' registry is used.
+        When no namespace is included, the 'SDK_IMAGE' namespace is used.
       type: string
     - name: VERBOSITY
       description: MSBuild verbosity level. Allowed values are 'q[uiet]', 'm[inimal]', 'n[ormal]', 'd[etailed]', and 'diag[nostic]'.
@@ -59,10 +58,6 @@ spec:
       type: array
       description: Environment variables.
       default: []
-    - name: REGISTRY
-      description: Registry of the .NET images.
-      default: image-registry.openshift-image-registry.svc:5000
-      type: string
     
   workspaces:  
     - name: source
@@ -75,7 +70,7 @@ spec:
     
   steps:
     - name: publish-image
-      image: $(params.REGISTRY)/$(params.DOTNET_NAMESPACE)/dotnet:$(params.SDK_VERSION)
+      image: $(params.SDK_IMAGE)
       args:
         - "--env-vars"
         - "$(params.ENV_VARS[*])"
@@ -102,8 +97,10 @@ spec:
           value: $(params.PROJECT)
         - name: PARAM_IMAGE_NAME
           value: $(params.IMAGE_NAME)
-        - name: PARAM_USE_DOTNET_BASE_IMAGES
-          value: $(params.USE_DOTNET_BASE_IMAGES)
+        - name: PARAM_SDK_IMAGE
+          value: $(params.SDK_IMAGE)
+        - name: PARAM_BASE_IMAGE
+          value: $(params.BASE_IMAGE)
         - name: PARAM_VERBOSITY
           value: $(params.VERBOSITY)
         
@@ -146,15 +143,32 @@ spec:
           cd ~/src
         fi
         
+        SDK_IMAGE="$PARAM_SDK_IMAGE"
+        SDK_IMAGE_REPOSITORY="${SDK_IMAGE%%/*}"
+        SDK_IMAGE_NAMESPACE="${SDK_IMAGE#*/}"
+        SDK_IMAGE_NAMESPACE="${SDK_IMAGE_NAMESPACE%/*}"
+        
+        BASE_IMAGE="$PARAM_BASE_IMAGE"
+        if [[ -n "$BASE_IMAGE" ]]; then
+          # If the name includes no repository, use the SDK image repository.
+          if [[ "${BASE_IMAGE%%/*}" != *.* ]]; then
+            # If the name has no path component, use the SDK image namespace.
+            if [[ "$BASE_IMAGE" != */* ]]; then
+              BASE_IMAGE="$SDK_IMAGE_NAMESPACE/$BASE_IMAGE"
+            fi
+            BASE_IMAGE="$SDK_IMAGE_REPOSITORY/$BASE_IMAGE"
+          fi
+        fi
+        
         # Support short names for pushing to the internal registry.
         IMAGE_NAME="$PARAM_IMAGE_NAME"
-        # If the name includes no repository, use the ImageRegistry repository.
+        # If the name includes no repository, use the SDK image repository.
         if [[ "${IMAGE_NAME%%/*}" != *.* ]]; then
           # If the name has no path component, use the current namespace.
           if [[ "$IMAGE_NAME" != */* ]]; then
             IMAGE_NAME="$CurrentKubernetesNamespace/$IMAGE_NAME"
           fi
-          IMAGE_NAME="$ImageRegistry/$IMAGE_NAME"
+          IMAGE_NAME="$SDK_IMAGE_REPOSITORY/$IMAGE_NAME"
         fi
         
         # Determine properties used by the .NET SDK container tooling.
@@ -168,12 +182,15 @@ spec:
           ContainerRepository="${ContainerRepository%:*}"
         fi
         
-        if [[ "$PARAM_USE_DOTNET_BASE_IMAGES" == "true" ]]; then
-        cat >/tmp/UseDotnetBaseImages.targets <<'EOF'
+        if [[ -n "$BASE_IMAGE" ]]; then
+        cat >/tmp/OverrideBaseImage.targets <<'EOF'
         <Project>
-          <Target Name="ComputeKubernetesDotnetBaseImage" BeforeTargets="ComputeContainerBaseImage">
+          <Target Name="ComputeOverrideBaseImage" BeforeTargets="ComputeContainerBaseImage">
             <PropertyGroup>
-              <ContainerBaseImage>$(ImageRegistry)/$(DotnetImageNamespace)/dotnet-runtime:$(_TargetFrameworkVersionWithoutV)</ContainerBaseImage>
+              <ContainerBaseImage>$(BASE_IMAGE)</ContainerBaseImage>
+              <!-- If no tag was specified, use the target framework version as the tag. -->
+              <ContainerBaseImage Condition="!$(ContainerBaseImage.Substring($(ContainerBaseImage.LastIndexOf('/'))).Contains(':'))"
+              >$(ContainerBaseImage):$(_TargetFrameworkVersionWithoutV)</ContainerBaseImage>
             </PropertyGroup>
           </Target>
         </Project>
@@ -185,8 +202,8 @@ spec:
         PUBLISH_ARGS+=( "--getProperty:GeneratedContainerDigest" "--getResultOutputFile:/tmp/IMAGE_DIGEST" )
         PUBLISH_ARGS+=( "-v" "$PARAM_VERBOSITY" )
         PUBLISH_ARGS+=( "-p:ContainerRegistry=$ContainerRegistry" "-p:ContainerRepository=$ContainerRepository" -p:ContainerImageTag= "-p:ContainerImageTags=$ContainerImageTag" )
-        if [[ "$PARAM_USE_DOTNET_BASE_IMAGES" == "true" ]]; then
-          PUBLISH_ARGS+=( "-p:CustomBeforeDirectoryBuildProps=/tmp/UseDotnetBaseImages.targets" )
+        if [[ -n "$BASE_IMAGE" ]]; then
+          PUBLISH_ARGS+=( "-p:CustomBeforeDirectoryBuildProps=/tmp/OverrideBaseImage.targets" "-p:BASE_IMAGE=$BASE_IMAGE" )
         fi
         PUBLISH_ARGS+=( "/t:PublishContainer" )
         PUBLISH_ARGS+=( "$PARAM_PROJECT" )

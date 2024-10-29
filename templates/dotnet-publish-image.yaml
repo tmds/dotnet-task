@@ -3,7 +3,7 @@
 {{- $parameters := list
     "PROJECT"
     "IMAGE_NAME"
-    "USE_DOTNET_BASE_IMAGES"
+    "BASE_IMAGE"
     "VERBOSITY"
     "BUILD_PROPS"
 }}
@@ -33,7 +33,7 @@ spec:
   workspaces:  {{ include "workspaces" ( list . $workspaces ) | nindent 4 }}
   steps:
     - name: publish-image
-      image: $(params.REGISTRY)/$(params.DOTNET_NAMESPACE)/dotnet:$(params.SDK_VERSION)
+      image: $(params.SDK_IMAGE)
       args:
         - "--env-vars"
         - "$(params.ENV_VARS[*])"

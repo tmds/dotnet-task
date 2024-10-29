@@ -10,16 +10,16 @@ source ./test/helper/helper.sh
     [ -n "${E2E_DOTNET_PARAMS_REVISION}" ]
     [ -n "${E2E_DOTNET_PARAMS_PROJECT}" ]
     [ -n "${E2E_DOTNET_PARAMS_IMAGE}" ]
-    [ -n "${E2E_DOTNET_PARAMS_DOTNET_NAMESPACE}" ]
-    [ -n "${E2E_DOTNET_PARAMS_DOTNET_REGISTRY}" ]
+    [ -n "${E2E_DOTNET_PARAMS_SDK_IMAGE}" ]
+    [ -n "${E2E_DOTNET_PARAMS_BASE_IMAGE}" ]
     
     run tkn pipeline start dotnet-pipeline \
         --param URL="$E2E_DOTNET_PARAMS_URL" \
         --param REVISION="$E2E_DOTNET_PARAMS_REVISION" \
         --param PROJECT="$E2E_DOTNET_PARAMS_PROJECT" \
         --param IMAGE_NAME="$E2E_DOTNET_PARAMS_IMAGE" \
-        --param DOTNET_NAMESPACE="$E2E_DOTNET_PARAMS_DOTNET_NAMESPACE" \
-        --param REGISTRY="$E2E_DOTNET_PARAMS_DOTNET_REGISTRY" \
+        --param SDK_IMAGE="$E2E_DOTNET_PARAMS_SDK_IMAGE" \
+        --param BASE_IMAGE="$E2E_DOTNET_PARAMS_BASE_IMAGE" \
         --workspace="name=source,claimName=dotnet-pvc" \
         --filename=test/e2e/resources/pipeline-dotnet.yaml \
         --showlog

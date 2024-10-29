@@ -17,6 +17,8 @@ public abstract class TaskScriptTests : FileCleanupBase
 
     protected const string TestCurrentNamespace ="test-namespace";
     protected const string TestImageRegistry = "test-image-registry.svc:5000";
+    protected const string TestDotnetNamespace = "dotnet-images";
+    protected const string TestDotnetSdkRepository = "sdk";
 
     protected TaskScriptTests(DotnetTektonTasks tektonTasks, string taskName)
     {
@@ -190,8 +192,8 @@ public abstract class TaskScriptTests : FileCleanupBase
             string envvarName = (string)envvar["name"]!;
             switch (envvarName)
             {
-                case "ImageRegistry":
-                    envvarArgs.Add($"{envvarName}={TestImageRegistry}");
+                case "PARAM_SDK_IMAGE":
+                    envvarArgs.Add($"{envvarName}={TestImageRegistry}/{TestDotnetNamespace}/{TestDotnetSdkRepository}");
                     break;
                 case "CurrentKubernetesNamespace":
                     envvarArgs.Add($"{envvarName}={TestCurrentNamespace}");

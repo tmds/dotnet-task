@@ -131,54 +131,54 @@ public abstract class DotnetPublishImageTaskScriptTests : TaskScriptTests
         Assert.Equal(value, publishCommandArgs[^1]);
     }
 
-    [Theory]
-    [InlineData("true")]
-    [InlineData("false")]
-    [InlineData("")]
-    [InlineData("other")]
-    public void ParamUseDotnetImageStreamBaseImages(string value)
-    {
-        string[] publishCommandArgs = GetPublishCommandArgs(
-            envvars: new()
-            {
-                { "PARAM_USE_DOTNET_BASE_IMAGES", value}
-            });
+    // [Theory]
+    // [InlineData("true")]
+    // [InlineData("false")]
+    // [InlineData("")]
+    // [InlineData("other")]
+    // public void ParamUseDotnetImageStreamBaseImages(string value)
+    // {
+    //     string[] publishCommandArgs = GetPublishCommandArgs(
+    //         envvars: new()
+    //         {
+    //             { "PARAM_USE_DOTNET_BASE_IMAGES", value}
+    //         });
         
-        bool expectCustomBeforeDirectoryBuildProps = value == "true";
+    //     bool expectCustomBeforeDirectoryBuildProps = value == "true";
 
-        Assert.Equal(expectCustomBeforeDirectoryBuildProps, publishCommandArgs.Contains($"-p:CustomBeforeDirectoryBuildProps={UseDotnetBaseImagesPath}"));
-    }
+    //     Assert.Equal(expectCustomBeforeDirectoryBuildProps, publishCommandArgs.Contains($"-p:CustomBeforeDirectoryBuildProps={UseDotnetBaseImagesPath}"));
+    // }
 
-    [Fact]
-    public void UseDotnetImageStreamBaseImagesSetsContainerBaseImage()
-    {
-        string dotnetNamespace = "dotnet-namespace";
+    // [Fact]
+    // public void UseDotnetImageStreamBaseImagesSetsContainerBaseImage()
+    // {
+    //     string dotnetNamespace = "dotnet-namespace";
 
-        // Run a script that writes the ContainerBaseImage to a file.
-        string homeDirectory = CreateDirectory();
-        string baseImageFile = $"{homeDirectory}/base_image";
-        var runResult = RunTask(
-            new()
-            {
-                { "PARAM_USE_DOTNET_BASE_IMAGES", "true"},
-                { "DotnetImageNamespace", dotnetNamespace}
-            },
-            dotnetStubScript:
-            $"""
-            #!/bin/sh
-            set -e
-            alias dotnet="/usr/bin/dotnet"
-            dotnet new web -o /tmp/web
-            dotnet publish /t:ComputeContainerBaseImage -p:CustomBeforeDirectoryBuildProps={UseDotnetBaseImagesPath} --getProperty:ContainerBaseImage /tmp/web --getResultOutputFile:{baseImageFile}
-            {WriteImageDigest}
-            """,
-            homeDirectory: homeDirectory);
-        Assert.Empty(runResult.StandardError);
-        Assert.Equal(0, runResult.ExitCode);
+    //     // Run a script that writes the ContainerBaseImage to a file.
+    //     string homeDirectory = CreateDirectory();
+    //     string baseImageFile = $"{homeDirectory}/base_image";
+    //     var runResult = RunTask(
+    //         new()
+    //         {
+    //             { "PARAM_USE_DOTNET_BASE_IMAGES", "true"},
+    //             { "DotnetImageNamespace", dotnetNamespace}
+    //         },
+    //         dotnetStubScript:
+    //         $"""
+    //         #!/bin/sh
+    //         set -e
+    //         alias dotnet="/usr/bin/dotnet"
+    //         dotnet new web -o /tmp/web
+    //         dotnet publish /t:ComputeContainerBaseImage -p:CustomBeforeDirectoryBuildProps={UseDotnetBaseImagesPath} --getProperty:ContainerBaseImage /tmp/web --getResultOutputFile:{baseImageFile}
+    //         {WriteImageDigest}
+    //         """,
+    //         homeDirectory: homeDirectory);
+    //     Assert.Empty(runResult.StandardError);
+    //     Assert.Equal(0, runResult.ExitCode);
 
-        Assert.True(File.Exists(baseImageFile));
-        Assert.Equal($"{TestImageRegistry}/{dotnetNamespace}/dotnet-runtime:{DotnetVersion}", File.ReadAllText(baseImageFile).Trim());
-    }
+    //     Assert.True(File.Exists(baseImageFile));
+    //     Assert.Equal($"{TestImageRegistry}/{dotnetNamespace}/dotnet-runtime:{DotnetVersion}", File.ReadAllText(baseImageFile).Trim());
+    // }
 
     public static IEnumerable<object[]> ParamImageNameData
     {
