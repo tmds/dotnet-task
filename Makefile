@@ -30,6 +30,7 @@ E2E_DOTNET_PARAMS_PROJECT ?= app
 
 E2E_DOTNET_PARAMS_IMAGE ?= app-image:latest
 
+E2E_DOTNET_INSECURE_REGISTRY = registry.registry.svc.cluster.local:32222
 E2E_DOTNET_PARAMS_SDK_IMAGE = registry.registry.svc.cluster.local:32222/dotnet-images/dotnet:latest
 E2E_DOTNET_PARAMS_BASE_IMAGE = dotnet-runtime
 

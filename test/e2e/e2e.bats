@@ -20,6 +20,7 @@ source ./test/helper/helper.sh
         --param IMAGE_NAME="$E2E_DOTNET_PARAMS_IMAGE" \
         --param SDK_IMAGE="$E2E_DOTNET_PARAMS_SDK_IMAGE" \
         --param BASE_IMAGE="$E2E_DOTNET_PARAMS_BASE_IMAGE" \
+        --param INSECURE_REGISTRY="$E2E_DOTNET_INSECURE_REGISTRY" \
         --workspace="name=source,claimName=dotnet-pvc" \
         --filename=test/e2e/resources/pipeline-dotnet.yaml \
         --showlog

@@ -52,11 +52,7 @@ spec:
       args:
         - "--env-vars"
         - "$(params.ENV_VARS[*])"
-      env:    
-        - name: ImageRegistry
-          value: "$(params.REGISTRY)"
-        - name: DotnetImageNamespace
-          value: $(params.DOTNET_NAMESPACE)
+      env:
         - name: CurrentKubernetesNamespace
           value: $(context.taskRun.namespace)
         - name: RunningInTekton
