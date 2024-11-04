@@ -52,7 +52,7 @@ spec:
       args:
         - "--env-vars"
         - "$(params.ENV_VARS[*])"
-      env:
+      env:    
         - name: CurrentKubernetesNamespace
           value: $(context.taskRun.namespace)
         - name: RunningInTekton

@@ -76,7 +76,7 @@ spec:
         - "$(params.ENV_VARS[*])"
         - "--build-props"
         - "$(params.BUILD_PROPS[*])"
-      env:
+      env:    
         - name: CurrentKubernetesNamespace
           value: $(context.taskRun.namespace)
         - name: RunningInTekton
