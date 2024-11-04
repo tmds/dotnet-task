@@ -23,7 +23,7 @@ spec:
   params: {{ include "params" ( list . $parameters ) | nindent 4 }}
   steps:
     - name: dotnet
-      image: $(params.REGISTRY)/$(params.DOTNET_NAMESPACE)/dotnet:$(params.SDK_VERSION)
+      image: $(params.SDK_IMAGE)
       args:
         - "--env-vars"
         - "$(params.ENV_VARS[*])"

@@ -6,7 +6,7 @@ public abstract class DotnetPublishImageTaskScriptTests : TaskScriptTests
 {
     // Paths used by the script implementation.
     private const string ImageDigestPath = "/tmp/IMAGE_DIGEST";
-    private const string UseDotnetBaseImagesPath = "/tmp/UseDotnetBaseImages.targets";
+    private const string OverrideBaseImageTargetsPath = "/tmp/OverrideBaseImage.targets";
 
     private const string WriteImageDigest = $"echo 'sha256:deadbeef' >{ImageDigestPath}";
 
@@ -132,27 +132,48 @@ public abstract class DotnetPublishImageTaskScriptTests : TaskScriptTests
     }
 
     [Theory]
-    [InlineData("true")]
-    [InlineData("false")]
+    [InlineData("base-image")]
     [InlineData("")]
-    [InlineData("other")]
-    public void ParamUseDotnetImageStreamBaseImages(string value)
+    public void ParamOverrideBaseImage(string value)
     {
         string[] publishCommandArgs = GetPublishCommandArgs(
             envvars: new()
             {
-                { "PARAM_USE_DOTNET_BASE_IMAGES", value}
+                { "PARAM_BASE_IMAGE", value}
             });
         
-        bool expectCustomBeforeDirectoryBuildProps = value == "true";
+        bool expectCustomBeforeDirectoryBuildProps = !string.IsNullOrEmpty(value);
 
-        Assert.Equal(expectCustomBeforeDirectoryBuildProps, publishCommandArgs.Contains($"-p:CustomBeforeDirectoryBuildProps={UseDotnetBaseImagesPath}"));
+        Assert.Equal(expectCustomBeforeDirectoryBuildProps, publishCommandArgs.Contains($"-p:CustomBeforeDirectoryBuildProps={OverrideBaseImageTargetsPath}"));
     }
 
-    [Fact]
-    public void UseDotnetImageStreamBaseImagesSetsContainerBaseImage()
+    [Theory]
+    [InlineData("runtime-repo", $"{TestImageRegistry}/{TestDotnetNamespace}/runtime-repo")]
+    [InlineData("ns/runtime-repo", $"{TestImageRegistry}/ns/runtime-repo")]
+    [InlineData("server.io/ns/runtime-repo", $"server.io/ns/runtime-repo")]
+    [InlineData("runtime-repo:tag1", $"{TestImageRegistry}/{TestDotnetNamespace}/runtime-repo:tag1")]
+    [InlineData("ns/runtime-repo:tag1", $"{TestImageRegistry}/ns/runtime-repo:tag1")]
+    [InlineData("server.io/ns/runtime-repo:tag1", $"server.io/ns/runtime-repo:tag1")]
+    public void ParamBaseImage(string baseImageParam, string expectedBaseImage)
     {
-        string dotnetNamespace = "dotnet-namespace";
+        string[] publishCommandArgs = GetPublishCommandArgs(
+            envvars: new()
+            {
+                { "PARAM_BASE_IMAGE", baseImageParam}
+            });
+
+        string? baseImage = publishCommandArgs.FirstOrDefault(p => p.StartsWith("-p:BASE_IMAGE="))?.Substring("-p:BASE_IMAGE=".Length);
+        Assert.NotNull(baseImage);
+
+        Assert.Equal(expectedBaseImage, baseImage);
+    }
+
+    [Theory]
+    [InlineData("server.io/ns/runtime-repo", "server.io/ns/runtime-repo:<<version>>")]
+    [InlineData("server.io/ns/runtime-repo:tag1", "server.io/ns/runtime-repo:tag1")]
+    public void BaseImageToContainerBaseImage(string baseImage, string expectedContainerBaseImage)
+    {
+        expectedContainerBaseImage = expectedContainerBaseImage.Replace("<<version>>", DotnetVersion);
 
         // Run a script that writes the ContainerBaseImage to a file.
         string homeDirectory = CreateDirectory();
@@ -160,8 +181,7 @@ public abstract class DotnetPublishImageTaskScriptTests : TaskScriptTests
         var runResult = RunTask(
             new()
             {
-                { "PARAM_USE_DOTNET_BASE_IMAGES", "true"},
-                { "DotnetImageNamespace", dotnetNamespace}
+                { "PARAM_BASE_IMAGE", "dummy"}
             },
             dotnetStubScript:
             $"""
@@ -169,7 +189,7 @@ public abstract class DotnetPublishImageTaskScriptTests : TaskScriptTests
             set -e
             alias dotnet="/usr/bin/dotnet"
             dotnet new web -o /tmp/web
-            dotnet publish /t:ComputeContainerBaseImage -p:CustomBeforeDirectoryBuildProps={UseDotnetBaseImagesPath} --getProperty:ContainerBaseImage /tmp/web --getResultOutputFile:{baseImageFile}
+            dotnet publish /t:ComputeContainerBaseImage -p:CustomBeforeDirectoryBuildProps={OverrideBaseImageTargetsPath} -p:BASE_IMAGE={baseImage} --getProperty:ContainerBaseImage /tmp/web --getResultOutputFile:{baseImageFile}
             {WriteImageDigest}
             """,
             homeDirectory: homeDirectory);
@@ -177,7 +197,7 @@ public abstract class DotnetPublishImageTaskScriptTests : TaskScriptTests
         Assert.Equal(0, runResult.ExitCode);
 
         Assert.True(File.Exists(baseImageFile));
-        Assert.Equal($"{TestImageRegistry}/{dotnetNamespace}/dotnet-runtime:{DotnetVersion}", File.ReadAllText(baseImageFile).Trim());
+        Assert.Equal(expectedContainerBaseImage, File.ReadAllText(baseImageFile).Trim());
     }
 
     public static IEnumerable<object[]> ParamImageNameData

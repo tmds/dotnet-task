@@ -1,36 +1,35 @@
 {{- define "params" -}}
   {{- $parameters := index . 1 -}}
-{{ if has "SCRIPT" $parameters -}}
-- name: SCRIPT
-  description: The script to run.
+- name: SDK_IMAGE
+  description: Fully qualified name of the SDK image.
+  default: image-registry.openshift-image-registry.svc:5000/openshift/dotnet:latest
   type: string
-  default: dotnet --info
-{{ end -}}
 {{ if has "PROJECT" $parameters -}}
 - name: PROJECT
-  description: Path of the .NET project file.
+  description: Path of the .NET project file in the source workspace.
   type: string
 {{ end -}}
 {{ if has "IMAGE_NAME" $parameters -}}
 - name: IMAGE_NAME
   description: |
-    Name of the image repository to push. When it does not include a registry, it is pushed to the 'REGISTRY' parameter.
-    If no namespace is included, the current namespace is prepended to the name.
+    Name of the application image repository to push to.
+    When the name does not include a registry, the 'SDK_IMAGE' registry is used.
+    When no namespace is included, the current Kubernetes namespace is used.
   type: string
 {{ end -}}
-- name: SDK_VERSION
-  default: latest
-  description: Tag of .NET SDK image.
+{{ if has "BASE_IMAGE" $parameters -}}
+- name: BASE_IMAGE
+  description: |
+    When set, overrides the base image used for the application image.
+    When the name does not include a registry, the 'SDK_IMAGE' registry is used.
+    When no namespace is included, the 'SDK_IMAGE' namespace is used.
   type: string
-- name: DOTNET_NAMESPACE
-  description: Namespace of the .NET images. Set to '$(context.taskRun.namespace)' to use the pipeline namespace.
-  default: openshift
+{{ end -}}
+{{ if has "SCRIPT" $parameters -}}
+- name: SCRIPT
+  description: The script to run.
   type: string
-{{ if has "USE_DOTNET_BASE_IMAGES" $parameters -}}
-- name: USE_DOTNET_BASE_IMAGES
-  description: Set to 'true' to build the application image using DOTNET_NAMESPACE image base images.
-  default: "true"
-  type: string
+  default: dotnet --info
 {{ end -}}
 {{ if has "VERBOSITY" $parameters -}}
 - name: VERBOSITY
@@ -48,8 +47,4 @@
   type: array
   description: Environment variables.
   default: []
-- name: REGISTRY
-  description: Registry of the .NET images.
-  default: image-registry.openshift-image-registry.svc:5000
-  type: string
 {{ end -}}

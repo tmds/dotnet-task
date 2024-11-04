@@ -33,38 +33,26 @@ spec:
       optional: true
     
   params: 
+    - name: SDK_IMAGE
+      description: Fully qualified name of the SDK image.
+      default: image-registry.openshift-image-registry.svc:5000/openshift/dotnet:latest
+      type: string
     - name: SCRIPT
       description: The script to run.
       type: string
       default: dotnet --info
-    - name: SDK_VERSION
-      default: latest
-      description: Tag of .NET SDK image.
-      type: string
-    - name: DOTNET_NAMESPACE
-      description: Namespace of the .NET images. Set to '$(context.taskRun.namespace)' to use the pipeline namespace.
-      default: openshift
-      type: string
     - name: ENV_VARS
       type: array
       description: Environment variables.
       default: []
-    - name: REGISTRY
-      description: Registry of the .NET images.
-      default: image-registry.openshift-image-registry.svc:5000
-      type: string
     
   steps:
     - name: dotnet
-      image: $(params.REGISTRY)/$(params.DOTNET_NAMESPACE)/dotnet:$(params.SDK_VERSION)
+      image: $(params.SDK_IMAGE)
       args:
         - "--env-vars"
         - "$(params.ENV_VARS[*])"
       env:    
-        - name: ImageRegistry
-          value: "$(params.REGISTRY)"
-        - name: DotnetImageNamespace
-          value: $(params.DOTNET_NAMESPACE)
         - name: CurrentKubernetesNamespace
           value: $(context.taskRun.namespace)
         - name: RunningInTekton
@@ -77,6 +65,8 @@ spec:
           value: $(workspaces.dockerconfig.bound)
         - name: WORKSPACE_DOCKERCONFIG_PATH
           value: $(workspaces.dockerconfig.path)
+        - name: PARAM_SDK_IMAGE
+          value: $(params.SDK_IMAGE)
         - name: PARAM_SCRIPT
           value: $(params.SCRIPT)
         

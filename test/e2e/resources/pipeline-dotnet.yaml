@@ -18,9 +18,11 @@ spec:
       type: string
     - name: IMAGE_NAME
       type: string
-    - name: DOTNET_NAMESPACE
+    - name: SDK_IMAGE
       type: string
-    - name: REGISTRY
+    - name: BASE_IMAGE
+      type: string
+    - name: INSECURE_REGISTRY
       type: string
   tasks:
     - name: git-clone
@@ -49,13 +51,13 @@ spec:
           value: "$(params.PROJECT)"
         - name: IMAGE_NAME
           value: "$(params.IMAGE_NAME)"
-        - name: DOTNET_NAMESPACE
-          value: "$(params.DOTNET_NAMESPACE)"
-        - name: REGISTRY
-          value: "$(params.REGISTRY)"
+        - name: SDK_IMAGE
+          value: "$(params.SDK_IMAGE)"
+        - name: BASE_IMAGE
+          value: "$(params.BASE_IMAGE)"
         - name: ENV_VARS
           value:
-            - "DOTNET_CONTAINER_INSECURE_REGISTRIES=$(params.REGISTRY)"
+            - "DOTNET_CONTAINER_INSECURE_REGISTRIES=$(params.INSECURE_REGISTRY)"
       runAfter:
         - git-clone
       workspaces:
