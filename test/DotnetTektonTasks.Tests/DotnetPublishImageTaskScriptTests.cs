@@ -154,6 +154,12 @@ public abstract class DotnetPublishImageTaskScriptTests : TaskScriptTests
     [InlineData("runtime-repo:tag1", $"{TestImageRegistry}/{TestDotnetNamespace}/runtime-repo:tag1")]
     [InlineData("ns/runtime-repo:tag1", $"{TestImageRegistry}/ns/runtime-repo:tag1")]
     [InlineData("server.io/ns/runtime-repo:tag1", $"server.io/ns/runtime-repo:tag1")]
+    [InlineData("runtime-repo@sha256:deadbeef", $"{TestImageRegistry}/{TestDotnetNamespace}/runtime-repo@sha256:deadbeef")]
+    [InlineData("ns/runtime-repo@sha256:deadbeef", $"{TestImageRegistry}/ns/runtime-repo@sha256:deadbeef")]
+    [InlineData("server.io/ns/runtime-repo@sha256:deadbeef", $"server.io/ns/runtime-repo@sha256:deadbeef")]
+    [InlineData("runtime-repo:tag1@sha256:deadbeef", $"{TestImageRegistry}/{TestDotnetNamespace}/runtime-repo:tag1@sha256:deadbeef")]
+    [InlineData("ns/runtime-repo:tag1@sha256:deadbeef", $"{TestImageRegistry}/ns/runtime-repo:tag1@sha256:deadbeef")]
+    [InlineData("server.io/ns/runtime-repo:tag1@sha256:deadbeef", $"server.io/ns/runtime-repo:tag1@sha256:deadbeef")]
     public void ParamBaseImage(string baseImageParam, string expectedBaseImage)
     {
         string[] publishCommandArgs = GetPublishCommandArgs(
@@ -171,6 +177,8 @@ public abstract class DotnetPublishImageTaskScriptTests : TaskScriptTests
     [Theory]
     [InlineData("server.io/ns/runtime-repo", "server.io/ns/runtime-repo:<<version>>")]
     [InlineData("server.io/ns/runtime-repo:tag1", "server.io/ns/runtime-repo:tag1")]
+    [InlineData("server.io/ns/runtime-repo@sha256:deadbeef", "server.io/ns/runtime-repo@sha256:deadbeef")]
+    [InlineData("server.io/ns/runtime-repo:tag1@sha256:deadbeef", "server.io/ns/runtime-repo:tag1@sha256:deadbeef")]
     public void BaseImageToContainerBaseImage(string baseImage, string expectedContainerBaseImage)
     {
         expectedContainerBaseImage = expectedContainerBaseImage.Replace("<<version>>", DotnetVersion);

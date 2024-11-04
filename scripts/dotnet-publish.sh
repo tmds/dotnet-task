@@ -82,7 +82,7 @@ cat >/tmp/OverrideBaseImage.targets <<'EOF'
     <PropertyGroup>
       <ContainerBaseImage>$(BASE_IMAGE)</ContainerBaseImage>
       <!-- If no tag was specified, use the target framework version as the tag. -->
-      <ContainerBaseImage Condition="!$(ContainerBaseImage.Substring($(ContainerBaseImage.LastIndexOf('/'))).Contains(':'))"
+      <ContainerBaseImage Condition="$(ContainerBaseImage.Substring($(ContainerBaseImage.LastIndexOf('/'))).IndexOfAny(':@')) == -1"
       >$(ContainerBaseImage):$(_TargetFrameworkVersionWithoutV)</ContainerBaseImage>
     </PropertyGroup>
   </Target>
