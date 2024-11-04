@@ -16,6 +16,8 @@ jobs:
       with:
         dotnet-version: 9.0.x
         dotnet-quality: 'preview'
+    - name: Install Helm
+      uses: azure/setup-helm@v4.2.0
     - name: Fetch sources
       uses: actions/checkout@v4
       with:
