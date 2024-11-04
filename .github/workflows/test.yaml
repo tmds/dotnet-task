@@ -8,6 +8,24 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  test-unit:
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Install .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 9.0.x
+        dotnet-quality: 'preview'
+    - name: Fetch sources
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Run tests
+      run: |
+        export MSBUILDENSURESTDOUTFORTASKPROCESSES=1
+        export MSBUILDDISABLENODEREUSE=1
+        cd test/DotnetTektonTasks.Tests && dotnet test
+
   test-e2e:
     strategy:
       fail-fast: false # Keep running if one leg fails.
