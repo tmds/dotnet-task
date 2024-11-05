@@ -1,0 +1,13 @@
+apiVersion: v1
+entries:
+  task-dotnet:
+  - apiVersion: v2
+    created: "2024-11-05T11:58:24.76137246+01:00"
+    description: Tasks for working with .NET.
+    digest: 88b5a4c3927abf523b2a051bae1af96324d50a0214a89c41292bc43bd241f686
+    name: task-dotnet
+    type: application
+    urls:
+    - https://raw.githubusercontent.com/tmds/dotnet-task/refs/heads/main/charts/task-dotnet-0.1.0.tgz
+    version: 0.1.0
+generated: "2024-11-05T11:58:24.691390845+01:00"

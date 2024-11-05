@@ -14,7 +14,7 @@ static class Paths
             {
                 string assemblyPath = Assembly.GetExecutingAssembly().Location;
                 string? directory = Path.GetDirectoryName(assemblyPath)!;
-                while (!File.Exists(Path.Combine(directory!, "Chart.yaml")))
+                while (!File.Exists(Path.Combine(directory!, "src", "Chart.yaml")))
                 {
                     directory = Path.GetDirectoryName(directory);
                     if (directory is null)
@@ -22,7 +22,7 @@ static class Paths
                         throw new InvalidOperationException("Could not find Helm Chart.");
                     }
                 }
-                _helmChartDirectory = directory;
+                _helmChartDirectory = Path.Combine(directory, "src");
             }
             return _helmChartDirectory;
         }

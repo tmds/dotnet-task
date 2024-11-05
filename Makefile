@@ -4,8 +4,8 @@ BIN = $(CURDIR)/.bin
 OSP_VERSION ?= latest
 
 # using the chart name and version from chart's metadata
-CHART_NAME ?= $(shell awk '/^name:/ { print $$2 }' Chart.yaml)
-CHART_VERSION ?= $(shell awk '/^version:/ { print $$2 }' Chart.yaml)
+CHART_NAME ?= $(shell awk '/^name:/ { print $$2 }' src/Chart.yaml)
+CHART_VERSION ?= $(shell awk '/^version:/ { print $$2 }' src/Chart.yaml)
 
 RELEASE_VERSION = v$(CHART_VERSION)
 # release directory where the Tekton resources are rendered into.
@@ -43,7 +43,7 @@ ARGS ?=
 
 # uses helm to render the resource templates to the stdout
 define render-template
-	@helm template $(ARGS) $(CHART_NAME) .
+	@helm template $(ARGS) $(CHART_NAME) src
 endef
 
 $(BIN):
