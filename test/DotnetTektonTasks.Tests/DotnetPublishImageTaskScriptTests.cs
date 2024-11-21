@@ -1,3 +1,4 @@
+using Newtonsoft.Json.Linq;
 using SimpleExec;
 
 namespace DotnetTektonTasks.Tests;
@@ -145,41 +146,64 @@ public abstract class DotnetPublishImageTaskScriptTests : TaskScriptTests
         bool expectCustomBeforeDirectoryBuildProps = !string.IsNullOrEmpty(value);
 
         Assert.Equal(expectCustomBeforeDirectoryBuildProps, publishCommandArgs.Contains($"-p:CustomBeforeDirectoryBuildProps={OverrideBaseImageTargetsPath}"));
+
+        // ContainerFamily gets passed when a base image is specified.
+        string? containerFamilyProp = publishCommandArgs.LastOrDefault(p => p.StartsWith("-p:ContainerFamily="))?.Substring("-p:ContainerFamily=".Length);
+        string expectedContainerFamily = string.IsNullOrEmpty(value) ? null : "";
+        Assert.Equal(expectedContainerFamily, containerFamilyProp);
     }
 
     [Theory]
-    [InlineData("runtime-repo", $"{TestImageRegistry}/{TestDotnetNamespace}/runtime-repo")]
-    [InlineData("ns/runtime-repo", $"{TestImageRegistry}/ns/runtime-repo")]
-    [InlineData("server.io/ns/runtime-repo", $"server.io/ns/runtime-repo")]
-    [InlineData("runtime-repo:tag1", $"{TestImageRegistry}/{TestDotnetNamespace}/runtime-repo:tag1")]
-    [InlineData("ns/runtime-repo:tag1", $"{TestImageRegistry}/ns/runtime-repo:tag1")]
-    [InlineData("server.io/ns/runtime-repo:tag1", $"server.io/ns/runtime-repo:tag1")]
-    [InlineData("runtime-repo@sha256:deadbeef", $"{TestImageRegistry}/{TestDotnetNamespace}/runtime-repo@sha256:deadbeef")]
-    [InlineData("ns/runtime-repo@sha256:deadbeef", $"{TestImageRegistry}/ns/runtime-repo@sha256:deadbeef")]
-    [InlineData("server.io/ns/runtime-repo@sha256:deadbeef", $"server.io/ns/runtime-repo@sha256:deadbeef")]
-    [InlineData("runtime-repo:tag1@sha256:deadbeef", $"{TestImageRegistry}/{TestDotnetNamespace}/runtime-repo:tag1@sha256:deadbeef")]
-    [InlineData("ns/runtime-repo:tag1@sha256:deadbeef", $"{TestImageRegistry}/ns/runtime-repo:tag1@sha256:deadbeef")]
-    [InlineData("server.io/ns/runtime-repo:tag1@sha256:deadbeef", $"server.io/ns/runtime-repo:tag1@sha256:deadbeef")]
-    public void ParamBaseImage(string baseImageParam, string expectedBaseImage)
+    [InlineData("runtime-repo", $"{TestImageRegistry}/{TestDotnetNamespace}/runtime-repo", null)]
+    [InlineData("ns/runtime-repo", $"{TestImageRegistry}/ns/runtime-repo", null)]
+    [InlineData("server.io/ns/runtime-repo", $"server.io/ns/runtime-repo", null)]
+    [InlineData("runtime-repo:tag1", $"{TestImageRegistry}/{TestDotnetNamespace}/runtime-repo:tag1", null)]
+    [InlineData("ns/runtime-repo:tag1", $"{TestImageRegistry}/ns/runtime-repo:tag1", null)]
+    [InlineData("server.io/ns/runtime-repo:tag1", $"server.io/ns/runtime-repo:tag1", null)]
+    [InlineData("runtime-repo@sha256:deadbeef", $"{TestImageRegistry}/{TestDotnetNamespace}/runtime-repo@sha256:deadbeef", null)]
+    [InlineData("ns/runtime-repo@sha256:deadbeef", $"{TestImageRegistry}/ns/runtime-repo@sha256:deadbeef", null)]
+    [InlineData("server.io/ns/runtime-repo@sha256:deadbeef", $"server.io/ns/runtime-repo@sha256:deadbeef", null)]
+    [InlineData("runtime-repo:tag1@sha256:deadbeef", $"{TestImageRegistry}/{TestDotnetNamespace}/runtime-repo:tag1@sha256:deadbeef", null)]
+    [InlineData("ns/runtime-repo:tag1@sha256:deadbeef", $"{TestImageRegistry}/ns/runtime-repo:tag1@sha256:deadbeef", null)]
+    [InlineData("server.io/ns/runtime-repo:tag1@sha256:deadbeef", $"server.io/ns/runtime-repo:tag1@sha256:deadbeef", null)]
+    [InlineData("server.io/ns/runtime-repo:tag1@sha256:deadbeef", $"server.io/ns/runtime-repo:tag1@sha256:deadbeef", "")]
+    [InlineData("server.io/ns/runtime-repo:tag1@sha256:deadbeef", $"server.io/ns/runtime-repo:tag1@sha256:deadbeef", "ubi8")]
+    public void ParamBaseImage(string baseImageParam, string expectedBaseImage, string? containerFamily)
     {
+        IEnumerable<string>? args =
+            !string.IsNullOrEmpty(containerFamily)
+            ? new[] { "--build-props", $"ContainerFamily={containerFamily}" }
+            : null;
+
         string[] publishCommandArgs = GetPublishCommandArgs(
             envvars: new()
             {
                 { "PARAM_BASE_IMAGE", baseImageParam}
-            });
+            },
+            args: args);
 
         string? baseImage = publishCommandArgs.FirstOrDefault(p => p.StartsWith("-p:BASE_IMAGE="))?.Substring("-p:BASE_IMAGE=".Length);
         Assert.NotNull(baseImage);
 
         Assert.Equal(expectedBaseImage, baseImage);
+
+        string expectedContainerFamily = containerFamily ?? "";
+        string? containerFamilyProp = publishCommandArgs.LastOrDefault(p => p.StartsWith("-p:ContainerFamily="))?.Substring("-p:ContainerFamily=".Length);
+        Assert.NotNull(containerFamilyProp);
+
+        Assert.Equal(expectedContainerFamily, containerFamilyProp);
     }
 
     [Theory]
-    [InlineData("server.io/ns/runtime-repo", "server.io/ns/runtime-repo:<<version>>")]
-    [InlineData("server.io/ns/runtime-repo:tag1", "server.io/ns/runtime-repo:tag1")]
-    [InlineData("server.io/ns/runtime-repo@sha256:deadbeef", "server.io/ns/runtime-repo@sha256:deadbeef")]
-    [InlineData("server.io/ns/runtime-repo:tag1@sha256:deadbeef", "server.io/ns/runtime-repo:tag1@sha256:deadbeef")]
-    public void BaseImageToContainerBaseImage(string baseImage, string expectedContainerBaseImage)
+    [InlineData("server.io/ns/runtime-repo", "", "server.io/ns/runtime-repo:<<version>>")]
+    [InlineData("server.io/ns/runtime-repo:tag1", "", "server.io/ns/runtime-repo:tag1")]
+    [InlineData("server.io/ns/runtime-repo@sha256:deadbeef", "", "server.io/ns/runtime-repo@sha256:deadbeef")]
+    [InlineData("server.io/ns/runtime-repo:tag1@sha256:deadbeef", "", "server.io/ns/runtime-repo:tag1@sha256:deadbeef")]
+    [InlineData("server.io/ns/runtime-repo", "ubi8", "server.io/ns/runtime-repo:<<version>>-ubi8")]
+    [InlineData("server.io/ns/runtime-repo:tag1", "ubi8", "server.io/ns/runtime-repo:tag1")]
+    [InlineData("server.io/ns/runtime-repo@sha256:deadbeef", "ubi8", "server.io/ns/runtime-repo@sha256:deadbeef")]
+    [InlineData("server.io/ns/runtime-repo:tag1@sha256:deadbeef", "ubi8", "server.io/ns/runtime-repo:tag1@sha256:deadbeef")]
+    public void BaseImageToContainerBaseImage(string baseImage, string containerFamily, string expectedContainerBaseImage)
     {
         expectedContainerBaseImage = expectedContainerBaseImage.Replace("<<version>>", DotnetVersion);
 
@@ -197,7 +221,7 @@ public abstract class DotnetPublishImageTaskScriptTests : TaskScriptTests
             set -e
             alias dotnet="/usr/bin/dotnet"
             dotnet new web -o /tmp/web
-            dotnet publish /t:ComputeContainerBaseImage -p:CustomBeforeDirectoryBuildProps={OverrideBaseImageTargetsPath} -p:BASE_IMAGE={baseImage} --getProperty:ContainerBaseImage /tmp/web --getResultOutputFile:{baseImageFile}
+            dotnet publish /t:ComputeContainerBaseImage -p:CustomBeforeDirectoryBuildProps={OverrideBaseImageTargetsPath} -p:BASE_IMAGE={baseImage} -p:ContainerFamily={containerFamily} --getProperty:ContainerBaseImage /tmp/web --getResultOutputFile:{baseImageFile}
             {WriteImageDigest}
             """,
             homeDirectory: homeDirectory);
@@ -291,13 +315,12 @@ public abstract class DotnetPublishImageTaskScriptTests : TaskScriptTests
 }
 
 [Collection(nameof(TektonTaskTestCollection))]
-public class DotnetPublishImageTaskScriptTestsNet8 : DotnetPublishImageTaskScriptTests
+public class DotnetPublishImageTaskScriptTestsNet9 : DotnetPublishImageTaskScriptTests
 {
-    // TODO: update with released 9.0 image.
-    protected override string SdkImage => "quay.io/tmds/dotnet:9.0-ci";
+    protected override string SdkImage => "registry.access.redhat.com/ubi8/dotnet-90";
     protected override string DotnetVersion => "9.0";
 
-    public DotnetPublishImageTaskScriptTestsNet8(DotnetTektonTasks tektonTasks)
+    public DotnetPublishImageTaskScriptTestsNet9(DotnetTektonTasks tektonTasks)
       : base(tektonTasks)
     { }
 }

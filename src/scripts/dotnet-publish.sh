@@ -81,9 +81,12 @@ cat >/tmp/OverrideBaseImage.targets <<'EOF'
   <Target Name="ComputeOverrideBaseImage" BeforeTargets="ComputeContainerBaseImage">
     <PropertyGroup>
       <ContainerBaseImage>$(BASE_IMAGE)</ContainerBaseImage>
+      <_containerFamilySuffix/>
+      <_containerFamilySuffix Condition="'$(ContainerFamily)' != ''">-$(ContainerFamily)</_containerFamilySuffix>
       <!-- If no tag was specified, use the target framework version as the tag. -->
       <ContainerBaseImage Condition="$(ContainerBaseImage.Substring($(ContainerBaseImage.LastIndexOf('/'))).IndexOfAny(':@')) == -1"
-      >$(ContainerBaseImage):$(_TargetFrameworkVersionWithoutV)</ContainerBaseImage>
+      >$(ContainerBaseImage):$(_TargetFrameworkVersionWithoutV)$(_containerFamilySuffix)</ContainerBaseImage>
+      <!-- Append ContainerFamily. -->
     </PropertyGroup>
   </Target>
 </Project>
@@ -91,6 +94,10 @@ EOF
 fi
 
 declare -a PUBLISH_ARGS
+if [[ -n "$BASE_IMAGE" ]]; then
+  # Clear ContainerFamily but allow it to be overridden by PARAM_BUILD_PROPS.
+  PUBLISH_ARGS+=( "-p:ContainerFamily=" )
+fi
 PUBLISH_ARGS+=( "${PARAM_BUILD_PROPS[@]/#/-p:}" )
 PUBLISH_ARGS+=( "--getProperty:GeneratedContainerDigest" "--getResultOutputFile:/tmp/IMAGE_DIGEST" )
 PUBLISH_ARGS+=( "-v" "$PARAM_VERBOSITY" )
