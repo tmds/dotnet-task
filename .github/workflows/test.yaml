@@ -33,7 +33,6 @@ jobs:
       fail-fast: false # Keep running if one leg fails.
       matrix:
         pipeline-version:
-        - v0.50.6
         - v0.53.7
         - v0.56.5
         - v0.59.1
