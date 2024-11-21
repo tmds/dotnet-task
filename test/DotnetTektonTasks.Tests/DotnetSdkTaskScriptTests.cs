@@ -22,12 +22,23 @@ public abstract class DotnetSdkTaskScriptTests : TaskScriptTests
 }
 
 [Collection(nameof(TektonTaskTestCollection))]
-public class DotnetSdkTaskScriptTestsNet8 : DotnetSdkTaskScriptTests
+public class DotnetSdkTaskScriptTestsRedHatNet9 : DotnetSdkTaskScriptTests
 {
-    protected override string SdkImage => "registry.access.redhat.com/ubi8/dotnet-80:latest";
-    protected override string DotnetVersion => "8.0";
+    protected override string SdkImage => "registry.access.redhat.com/ubi8/dotnet-90";
+    protected override string DotnetVersion => "9.0";
 
-    public DotnetSdkTaskScriptTestsNet8(DotnetTektonTasks tektonTasks)
+    public DotnetSdkTaskScriptTestsRedHatNet9(DotnetTektonTasks tektonTasks)
+      : base(tektonTasks)
+    { }
+}
+
+[Collection(nameof(TektonTaskTestCollection))]
+public class DotnetSdkTaskScriptTestsMicrosoftNet9 : DotnetSdkTaskScriptTests
+{
+    protected override string SdkImage => "mcr.microsoft.com/dotnet/sdk:9.0";
+    protected override string DotnetVersion => "9.0";
+
+    public DotnetSdkTaskScriptTestsMicrosoftNet9(DotnetTektonTasks tektonTasks)
       : base(tektonTasks)
     { }
 }

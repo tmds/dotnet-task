@@ -6,7 +6,7 @@ namespace DotnetTektonTasks.Tests;
 public abstract class DotnetPublishImageTaskScriptTests : TaskScriptTests
 {
     // Paths used by the script implementation.
-    private const string PrintVersion = """if [ "$1" == "--version" ]; then echo "9.0" && exit 0; fi""";
+    private const string PrintVersion = """if [ "$1" = "--version" ]; then echo "9.0" && exit 0; fi""";
     private const string ImageDigestPath = "/tmp/IMAGE_DIGEST";
     private const string OverrideBaseImageTargetsPath = "/tmp/OverrideBaseImage.targets";
 
@@ -319,12 +319,23 @@ public abstract class DotnetPublishImageTaskScriptTests : TaskScriptTests
 }
 
 [Collection(nameof(TektonTaskTestCollection))]
-public class DotnetPublishImageTaskScriptTestsNet9 : DotnetPublishImageTaskScriptTests
+public class DotnetPublishImageTaskScriptTestsRedHatNet9 : DotnetPublishImageTaskScriptTests
 {
     protected override string SdkImage => "registry.access.redhat.com/ubi8/dotnet-90";
     protected override string DotnetVersion => "9.0";
 
-    public DotnetPublishImageTaskScriptTestsNet9(DotnetTektonTasks tektonTasks)
+    public DotnetPublishImageTaskScriptTestsRedHatNet9(DotnetTektonTasks tektonTasks)
+      : base(tektonTasks)
+    { }
+}
+
+[Collection(nameof(TektonTaskTestCollection))]
+public class DotnetPublishImageTaskScriptTestsMicrosoftNet9 : DotnetPublishImageTaskScriptTests
+{
+    protected override string SdkImage => "mcr.microsoft.com/dotnet/sdk:9.0";
+    protected override string DotnetVersion => "9.0";
+
+    public DotnetPublishImageTaskScriptTestsMicrosoftNet9(DotnetTektonTasks tektonTasks)
       : base(tektonTasks)
     { }
 }
