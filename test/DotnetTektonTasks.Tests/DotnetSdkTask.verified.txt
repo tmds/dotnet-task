@@ -35,7 +35,6 @@ spec:
   params: 
     - name: SDK_IMAGE
       description: Fully qualified name of the SDK image.
-      default: image-registry.openshift-image-registry.svc:5000/openshift/dotnet:latest
       type: string
     - name: SCRIPT
       description: The script to run.
