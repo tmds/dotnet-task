@@ -6,6 +6,7 @@ namespace DotnetTektonTasks.Tests;
 public abstract class DotnetPublishImageTaskScriptTests : TaskScriptTests
 {
     // Paths used by the script implementation.
+    private const string PrintVersion = """if [ "$1" == "--version" ]; then echo "9.0" && exit 0; fi""";
     private const string ImageDigestPath = "/tmp/IMAGE_DIGEST";
     private const string OverrideBaseImageTargetsPath = "/tmp/OverrideBaseImage.targets";
 
@@ -28,6 +29,7 @@ public abstract class DotnetPublishImageTaskScriptTests : TaskScriptTests
             },
             dotnetStubScript:
                 $"""
+                    {PrintVersion}
                     echo '{sha}' >{ImageDigestPath}
                     exit 0
                 """,
@@ -219,6 +221,7 @@ public abstract class DotnetPublishImageTaskScriptTests : TaskScriptTests
             $"""
             #!/bin/sh
             set -e
+            {PrintVersion}
             alias dotnet="/usr/bin/dotnet"
             dotnet new web -o /tmp/web
             dotnet publish /t:ComputeContainerBaseImage -p:CustomBeforeDirectoryBuildProps={OverrideBaseImageTargetsPath} -p:BASE_IMAGE={baseImage} -p:ContainerFamily={containerFamily} --getProperty:ContainerBaseImage /tmp/web --getResultOutputFile:{baseImageFile}
@@ -307,6 +310,7 @@ public abstract class DotnetPublishImageTaskScriptTests : TaskScriptTests
     {
         string dotnetStubScript =
             $"""
+            {PrintVersion}
             {WriteImageDigest}
             {script}
             """;
