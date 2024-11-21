@@ -139,6 +139,13 @@ spec:
           cd ~/src
         fi
         
+        DOTNET_SDK_VERSION=$(dotnet --version)
+        
+        if [ "${DOTNET_SDK_VERSION%%.*}" -lt 9 ]; then
+          echo "error: The Task requires a .NET SDK 9.0 or higher. The SDK has version $DOTNET_SDK_VERSION." >&2
+          exit 1
+        fi
+        
         SDK_IMAGE="$PARAM_SDK_IMAGE"
         SDK_IMAGE_REPOSITORY="${SDK_IMAGE%%/*}"
         SDK_IMAGE_NAMESPACE="${SDK_IMAGE#*/}"
