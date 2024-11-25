@@ -45,30 +45,21 @@ fi
 
 SDK_IMAGE="$PARAM_SDK_IMAGE"
 SDK_IMAGE_REPOSITORY="${SDK_IMAGE%%/*}"
-SDK_IMAGE_NAMESPACE="${SDK_IMAGE#*/}"
-SDK_IMAGE_NAMESPACE="${SDK_IMAGE_NAMESPACE%/*}"
 
 BASE_IMAGE="$PARAM_BASE_IMAGE"
 if [[ -n "$BASE_IMAGE" ]]; then
   # If the name includes no repository, use the SDK image repository.
   if [[ "${BASE_IMAGE%%/*}" != *.* ]]; then
-    # If the name has no path component, use the SDK image namespace.
-    if [[ "$BASE_IMAGE" != */* ]]; then
-      BASE_IMAGE="$SDK_IMAGE_NAMESPACE/$BASE_IMAGE"
-    fi
     BASE_IMAGE="$SDK_IMAGE_REPOSITORY/$BASE_IMAGE"
   fi
 fi
+BASE_IMAGE_REPOSITORY="${BASE_IMAGE%%/*}"
 
 # Support short names for pushing to the internal registry.
 IMAGE_NAME="$PARAM_IMAGE_NAME"
 # If the name includes no repository, use the SDK image repository.
 if [[ "${IMAGE_NAME%%/*}" != *.* ]]; then
-  # If the name has no path component, use the current namespace.
-  if [[ "$IMAGE_NAME" != */* ]]; then
-    IMAGE_NAME="$CurrentKubernetesNamespace/$IMAGE_NAME"
-  fi
-  IMAGE_NAME="$SDK_IMAGE_REPOSITORY/$IMAGE_NAME"
+  IMAGE_NAME="${SDK_IMAGE_REPOSITORY}/$IMAGE_NAME"
 fi
 
 # Determine properties used by the .NET SDK container tooling.

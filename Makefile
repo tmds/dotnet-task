@@ -28,11 +28,11 @@ E2E_DOTNET_PARAMS_REVISION ?= dotnet-$(DOTNET_VERSION)
 E2E_DOTNET_PARAMS_URL ?= https://github.com/redhat-developer/s2i-dotnetcore-ex
 E2E_DOTNET_PARAMS_PROJECT ?= app
 
-E2E_DOTNET_PARAMS_IMAGE ?= app-image:latest
+E2E_DOTNET_PARAMS_IMAGE ?= library/app-image:latest
 
 E2E_DOTNET_INSECURE_REGISTRY = registry.registry.svc.cluster.local:32222
 E2E_DOTNET_PARAMS_SDK_IMAGE = registry.registry.svc.cluster.local:32222/dotnet-images/dotnet:latest
-E2E_DOTNET_PARAMS_BASE_IMAGE = dotnet-runtime
+E2E_DOTNET_PARAMS_BASE_IMAGE = dotnet-images/dotnet-runtime
 
 # generic arguments employed on most of the targets
 ARGS ?=

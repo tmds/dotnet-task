@@ -2,7 +2,6 @@
   {{- $parameters := index . 1 -}}
 - name: SDK_IMAGE
   description: Fully qualified name of the SDK image.
-  default: image-registry.openshift-image-registry.svc:5000/openshift/dotnet:latest
   type: string
 {{ if has "PROJECT" $parameters -}}
 - name: PROJECT
@@ -14,7 +13,6 @@
   description: |
     Name of the application image repository to push to.
     When the name does not include a registry, the 'SDK_IMAGE' registry is used.
-    When no namespace is included, the current Kubernetes namespace is used.
   type: string
 {{ end -}}
 {{ if has "BASE_IMAGE" $parameters -}}
@@ -22,8 +20,9 @@
   description: |
     When set, overrides the base image used for the application image.
     When the name does not include a registry, the 'SDK_IMAGE' registry is used.
-    When no namespace is included, the 'SDK_IMAGE' namespace is used.
+    The current Kubernetes namespace can be used via '$(context.taskRun.namespace)'.
   type: string
+  default: ""
 {{ end -}}
 {{ if has "SCRIPT" $parameters -}}
 - name: SCRIPT

@@ -156,16 +156,16 @@ public abstract class DotnetPublishImageTaskScriptTests : TaskScriptTests
     }
 
     [Theory]
-    [InlineData("runtime-repo", $"{TestImageRegistry}/{TestDotnetNamespace}/runtime-repo", null)]
+    [InlineData("runtime-repo", $"{TestImageRegistry}/runtime-repo", null)]
     [InlineData("ns/runtime-repo", $"{TestImageRegistry}/ns/runtime-repo", null)]
     [InlineData("server.io/ns/runtime-repo", $"server.io/ns/runtime-repo", null)]
-    [InlineData("runtime-repo:tag1", $"{TestImageRegistry}/{TestDotnetNamespace}/runtime-repo:tag1", null)]
+    [InlineData("runtime-repo:tag1", $"{TestImageRegistry}/runtime-repo:tag1", null)]
     [InlineData("ns/runtime-repo:tag1", $"{TestImageRegistry}/ns/runtime-repo:tag1", null)]
     [InlineData("server.io/ns/runtime-repo:tag1", $"server.io/ns/runtime-repo:tag1", null)]
-    [InlineData("runtime-repo@sha256:deadbeef", $"{TestImageRegistry}/{TestDotnetNamespace}/runtime-repo@sha256:deadbeef", null)]
+    [InlineData("runtime-repo@sha256:deadbeef", $"{TestImageRegistry}/runtime-repo@sha256:deadbeef", null)]
     [InlineData("ns/runtime-repo@sha256:deadbeef", $"{TestImageRegistry}/ns/runtime-repo@sha256:deadbeef", null)]
     [InlineData("server.io/ns/runtime-repo@sha256:deadbeef", $"server.io/ns/runtime-repo@sha256:deadbeef", null)]
-    [InlineData("runtime-repo:tag1@sha256:deadbeef", $"{TestImageRegistry}/{TestDotnetNamespace}/runtime-repo:tag1@sha256:deadbeef", null)]
+    [InlineData("runtime-repo:tag1@sha256:deadbeef", $"{TestImageRegistry}/runtime-repo:tag1@sha256:deadbeef", null)]
     [InlineData("ns/runtime-repo:tag1@sha256:deadbeef", $"{TestImageRegistry}/ns/runtime-repo:tag1@sha256:deadbeef", null)]
     [InlineData("server.io/ns/runtime-repo:tag1@sha256:deadbeef", $"server.io/ns/runtime-repo:tag1@sha256:deadbeef", null)]
     [InlineData("server.io/ns/runtime-repo:tag1@sha256:deadbeef", $"server.io/ns/runtime-repo:tag1@sha256:deadbeef", "")]
@@ -245,10 +245,10 @@ public abstract class DotnetPublishImageTaskScriptTests : TaskScriptTests
                 string expectedTags = tag.Length > 0 ? tag : "latest";
 
                 // no name specified.
-                yield return new object[] { $"{tagSuffix}", new string[] { $"-p:ContainerRegistry={TestImageRegistry}", $"-p:ContainerRepository={TestCurrentNamespace}/", "-p:ContainerImageTag=", $"-p:ContainerImageTags={expectedTags}" } };
+                yield return new object[] { $"{tagSuffix}", new string[] { $"-p:ContainerRegistry={TestImageRegistry}", $"-p:ContainerRepository=", "-p:ContainerImageTag=", $"-p:ContainerImageTags={expectedTags}" } };
 
                 string name = "image-name";
-                yield return new object[] { $"{name}{tagSuffix}", new string[] { $"-p:ContainerRegistry={TestImageRegistry}", $"-p:ContainerRepository={TestCurrentNamespace}/{name}", "-p:ContainerImageTag=", $"-p:ContainerImageTags={expectedTags}" } };
+                yield return new object[] { $"{name}{tagSuffix}", new string[] { $"-p:ContainerRegistry={TestImageRegistry}", $"-p:ContainerRepository={name}", "-p:ContainerImageTag=", $"-p:ContainerImageTags={expectedTags}" } };
 
                 string @namespace = "other-namespace";
                 yield return new object[] { $"{@namespace}/{name}{tagSuffix}", new string[] { $"-p:ContainerRegistry={TestImageRegistry}", $"-p:ContainerRepository={@namespace}/{name}", "-p:ContainerImageTag=", $"-p:ContainerImageTags={expectedTags}" } };
@@ -268,7 +268,7 @@ public abstract class DotnetPublishImageTaskScriptTests : TaskScriptTests
             "publish",
             "--getProperty:GeneratedContainerDigest", $"--getResultOutputFile:{ImageDigestPath}",
             "-v", "",
-            $"-p:ContainerRegistry={TestImageRegistry}", $"-p:ContainerRepository={TestCurrentNamespace}/", "-p:ContainerImageTag=", "-p:ContainerImageTags=latest",
+            $"-p:ContainerRegistry={TestImageRegistry}", $"-p:ContainerRepository=", "-p:ContainerImageTag=", "-p:ContainerImageTags=latest",
             "/t:PublishContainer",
             ""
         ];

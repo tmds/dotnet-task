@@ -29,7 +29,6 @@ spec:
   params: 
     - name: SDK_IMAGE
       description: Fully qualified name of the SDK image.
-      default: image-registry.openshift-image-registry.svc:5000/openshift/dotnet:latest
       type: string
     - name: PROJECT
       description: Path of the .NET project file in the source workspace.
@@ -38,14 +37,14 @@ spec:
       description: |
         Name of the application image repository to push to.
         When the name does not include a registry, the 'SDK_IMAGE' registry is used.
-        When no namespace is included, the current Kubernetes namespace is used.
       type: string
     - name: BASE_IMAGE
       description: |
         When set, overrides the base image used for the application image.
         When the name does not include a registry, the 'SDK_IMAGE' registry is used.
-        When no namespace is included, the 'SDK_IMAGE' namespace is used.
+        The current Kubernetes namespace can be used via '$(context.taskRun.namespace)'.
       type: string
+      default: ""
     - name: VERBOSITY
       description: MSBuild verbosity level. Allowed values are 'q[uiet]', 'm[inimal]', 'n[ormal]', 'd[etailed]', and 'diag[nostic]'.
       default: "minimal"
@@ -148,30 +147,21 @@ spec:
         
         SDK_IMAGE="$PARAM_SDK_IMAGE"
         SDK_IMAGE_REPOSITORY="${SDK_IMAGE%%/*}"
-        SDK_IMAGE_NAMESPACE="${SDK_IMAGE#*/}"
-        SDK_IMAGE_NAMESPACE="${SDK_IMAGE_NAMESPACE%/*}"
         
         BASE_IMAGE="$PARAM_BASE_IMAGE"
         if [[ -n "$BASE_IMAGE" ]]; then
           # If the name includes no repository, use the SDK image repository.
           if [[ "${BASE_IMAGE%%/*}" != *.* ]]; then
-            # If the name has no path component, use the SDK image namespace.
-            if [[ "$BASE_IMAGE" != */* ]]; then
-              BASE_IMAGE="$SDK_IMAGE_NAMESPACE/$BASE_IMAGE"
-            fi
             BASE_IMAGE="$SDK_IMAGE_REPOSITORY/$BASE_IMAGE"
           fi
         fi
+        BASE_IMAGE_REPOSITORY="${BASE_IMAGE%%/*}"
         
         # Support short names for pushing to the internal registry.
         IMAGE_NAME="$PARAM_IMAGE_NAME"
         # If the name includes no repository, use the SDK image repository.
         if [[ "${IMAGE_NAME%%/*}" != *.* ]]; then
-          # If the name has no path component, use the current namespace.
-          if [[ "$IMAGE_NAME" != */* ]]; then
-            IMAGE_NAME="$CurrentKubernetesNamespace/$IMAGE_NAME"
-          fi
-          IMAGE_NAME="$SDK_IMAGE_REPOSITORY/$IMAGE_NAME"
+          IMAGE_NAME="${SDK_IMAGE_REPOSITORY}/$IMAGE_NAME"
         fi
         
         # Determine properties used by the .NET SDK container tooling.
