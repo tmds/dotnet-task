@@ -7,6 +7,7 @@
     "VERBOSITY"
     "BUILD_PROPS"
     "PRE_PUBLISH_SCRIPT"
+    "SDK_IMAGE_PUBLISH"
 }}
 {{- $workspaces := list
     "source"
@@ -27,9 +28,9 @@ spec:
     and pushes it to a container registry.
   results:
     - name: IMAGE_DIGEST
-      description: Digest of the image.
+      description: Digest of the application image.
     - name: IMAGE
-      description: Fully qualified image name with digest.
+      description: Fully qualified application image name with digest.
   params: {{ include "params" ( list . $parameters ) | nindent 4 }}
   workspaces:  {{ include "workspaces" ( list . $workspaces ) | nindent 4 }}
   steps:

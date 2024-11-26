@@ -24,17 +24,18 @@ spec:
     - name: source
       mountPath: /workspace/source
       description: >-
-        An optional workspace that allows to provide source code.
+        An optional workspace that allows to provide .NET source code.
       optional: true
     - name: dockerconfig
       description: >-
-        An optional workspace that allows providing a .docker/config.json file to access the container registry.
-        The file should be placed at the root of the Workspace with name config.json or .dockerconfigjson.
+        An optional workspace that allows providing additional credentials to access the container registry using the '.docker/config.json' format.
+        A file should be placed at the root of the workspace with a name of 'config.json' or '.dockerconfigjson'.
       optional: true
     
   params: 
+    
     - name: SDK_IMAGE
-      description: Fully qualified name of the SDK image.
+      description: Fully qualified name of the .NET SDK image.
       type: string
     - name: SCRIPT
       description: The script to run.
