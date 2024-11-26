@@ -2,18 +2,19 @@
   {{- $workspaces := index . 1 -}}
 {{ if has "source" $workspaces -}}
 - name: source
+  description: .NET source code.
   mountPath: /workspace/source
 {{ end -}}
 {{ if has "source-optional" $workspaces -}}
 - name: source
   mountPath: /workspace/source
   description: >-
-    An optional workspace that allows to provide source code.
+    An optional workspace that allows to provide .NET source code.
   optional: true
 {{ end -}}
 - name: dockerconfig
   description: >-
-    An optional workspace that allows providing a .docker/config.json file to access the container registry.
-    The file should be placed at the root of the Workspace with name config.json or .dockerconfigjson.
+    An optional workspace that allows providing additional credentials to access the container registry using the '.docker/config.json' format.
+    A file should be placed at the root of the workspace with a name of 'config.json' or '.dockerconfigjson'.
   optional: true
 {{ end -}}

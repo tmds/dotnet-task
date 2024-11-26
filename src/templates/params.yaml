@@ -1,8 +1,14 @@
 {{- define "params" -}}
   {{- $parameters := index . 1 -}}
+{{ if has "SDK_IMAGE_PUBLISH" $parameters -}}
 - name: SDK_IMAGE
-  description: Fully qualified name of the SDK image.
+  description: Fully qualified name of the .NET SDK image used to build the container image.
   type: string
+{{ else }}
+- name: SDK_IMAGE
+  description: Fully qualified name of the .NET SDK image.
+  type: string
+{{ end -}}
 {{ if has "PROJECT" $parameters -}}
 - name: PROJECT
   description: Path of the .NET project file in the source workspace.
@@ -20,7 +26,8 @@
   description: |
     When set, overrides the base image used for the application image.
     When the name does not include a registry, the 'SDK_IMAGE' registry is used.
-    The current Kubernetes namespace can be used via '$(context.taskRun.namespace)'.
+    If the name does not include a tag, the .NET project target version is used (for example: '9.0').
+    The current Kubernetes namespace can be used in the name through '$(context.taskRun.namespace)'.
   type: string
   default: ""
 {{ end -}}

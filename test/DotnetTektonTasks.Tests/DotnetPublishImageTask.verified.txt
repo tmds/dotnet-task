@@ -23,12 +23,12 @@ spec:
     and pushes it to a container registry.
   results:
     - name: IMAGE_DIGEST
-      description: Digest of the image.
+      description: Digest of the application image.
     - name: IMAGE
-      description: Fully qualified image name with digest.
+      description: Fully qualified application image name with digest.
   params: 
     - name: SDK_IMAGE
-      description: Fully qualified name of the SDK image.
+      description: Fully qualified name of the .NET SDK image used to build the container image.
       type: string
     - name: PROJECT
       description: Path of the .NET project file in the source workspace.
@@ -42,7 +42,8 @@ spec:
       description: |
         When set, overrides the base image used for the application image.
         When the name does not include a registry, the 'SDK_IMAGE' registry is used.
-        The current Kubernetes namespace can be used via '$(context.taskRun.namespace)'.
+        If the name does not include a tag, the .NET project target version is used (for example: '9.0').
+        The current Kubernetes namespace can be used in the name through '$(context.taskRun.namespace)'.
       type: string
       default: ""
     - name: PRE_PUBLISH_SCRIPT
@@ -66,11 +67,12 @@ spec:
     
   workspaces:  
     - name: source
+      description: .NET source code.
       mountPath: /workspace/source
     - name: dockerconfig
       description: >-
-        An optional workspace that allows providing a .docker/config.json file to access the container registry.
-        The file should be placed at the root of the Workspace with name config.json or .dockerconfigjson.
+        An optional workspace that allows providing additional credentials to access the container registry using the '.docker/config.json' format.
+        A file should be placed at the root of the workspace with a name of 'config.json' or '.dockerconfigjson'.
       optional: true
     
   steps:
