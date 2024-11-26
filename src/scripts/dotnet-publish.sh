@@ -36,8 +36,19 @@ else
   cd ~/src
 fi
 
-DOTNET_SDK_VERSION=$(dotnet --version)
+if [[ -n "$PARAM_PRE_PUBLISH_SCRIPT" ]]; then
+  eval "$PARAM_PRE_PUBLISH_SCRIPT"
 
+  # Reset flags and working dir.
+  set -euo pipefail
+  if [[ "$WORKSPACE_SOURCE_BOUND" == "true" ]]; then
+    cd "$WORKSPACE_SOURCE_PATH"
+  else
+    cd ~/src
+  fi
+fi
+
+DOTNET_SDK_VERSION=$(dotnet --version)
 if [ "${DOTNET_SDK_VERSION%%.*}" -lt 9 ]; then
   echo "error: The Task requires a .NET SDK 9.0 or higher. The SDK has version $DOTNET_SDK_VERSION." >&2
   exit 1
@@ -53,9 +64,7 @@ if [[ -n "$BASE_IMAGE" ]]; then
     BASE_IMAGE="$SDK_IMAGE_REPOSITORY/$BASE_IMAGE"
   fi
 fi
-BASE_IMAGE_REPOSITORY="${BASE_IMAGE%%/*}"
 
-# Support short names for pushing to the internal registry.
 IMAGE_NAME="$PARAM_IMAGE_NAME"
 # If the name includes no repository, use the SDK image repository.
 if [[ "${IMAGE_NAME%%/*}" != *.* ]]; then

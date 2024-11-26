@@ -6,6 +6,7 @@
     "BASE_IMAGE"
     "VERBOSITY"
     "BUILD_PROPS"
+    "PRE_PUBLISH_SCRIPT"
 }}
 {{- $workspaces := list
     "source"

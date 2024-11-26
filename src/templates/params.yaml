@@ -30,6 +30,14 @@
   type: string
   default: dotnet --info
 {{ end -}}
+{{ if has "PRE_PUBLISH_SCRIPT" $parameters -}}
+- name: PRE_PUBLISH_SCRIPT
+  description: |
+    Shell commands to run before publishing the container image.
+    The shell is configured to exit immediately when commands fail with a non-zero status.
+  type: string
+  default: ""
+{{ end -}}
 {{ if has "VERBOSITY" $parameters -}}
 - name: VERBOSITY
   description: MSBuild verbosity level. Allowed values are 'q[uiet]', 'm[inimal]', 'n[ormal]', 'd[etailed]', and 'diag[nostic]'.

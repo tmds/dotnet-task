@@ -88,6 +88,94 @@ public abstract class DotnetPublishImageTaskScriptTests : TaskScriptTests
         Assert.Equal(expected, runResult.StandardError);
     }
 
+    [Fact]
+    public void ParamPrePublishScriptPrintsOutput()
+    {
+        var runResult = RunTask(
+            envvars: new()
+            {
+                { "PARAM_PRE_PUBLISH_SCRIPT",
+                    $"""
+                    echo "hello"
+                    echo "world"
+                    """}
+            },
+            dotnetStubScript:
+                $"""
+                {PrintVersion}
+                echo 'dotnet'
+                {WriteImageDigest}
+                """);
+        Assert.Equal(0, runResult.ExitCode);
+        Assert.Equal("", runResult.StandardError);
+        string[] lines = runResult.StandardOutput.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        Assert.Equal(3, lines.Length);
+        Assert.Equal("hello", lines[0]);
+        Assert.Equal("world", lines[1]);
+        Assert.Equal("dotnet", lines[2]);
+    }
+
+    [Fact]
+    public void ParamPrePublishScriptTaskExitsOnFailure()
+    {
+        var runResult = RunTask(
+            envvars: new()
+            {
+                { "PARAM_PRE_PUBLISH_SCRIPT",
+                    $"""
+                    echo "hello"
+                    exit 1
+                    """}
+            },
+            dotnetStubScript:
+                $"""
+                {PrintVersion}
+                echo 'dotnet'
+                {WriteImageDigest}
+                """);
+        Assert.Equal(1, runResult.ExitCode);
+        Assert.Equal("", runResult.StandardError);
+        string[] lines = runResult.StandardOutput.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        Assert.Single(lines);
+        Assert.Equal("hello", lines[0]);
+    }
+
+    [Fact]
+    public void ParamPrePublishScriptResetEnvAfterScript()
+    {
+        var runResult = RunTask(
+            envvars: new()
+            {
+                { "PARAM_PRE_PUBLISH_SCRIPT",
+                    $"""
+                    set +e
+                    cd /
+
+                    echo "script"
+                    pwd
+                    [[ $- == *e* ]] && echo "errexit enabled" || echo "errexit disabled"
+                    """}
+            },
+            dotnetStubScript:
+                $"""
+                {PrintVersion}
+                echo "dotnet"
+                pwd
+                {WriteImageDigest}
+                exit 1
+                """);
+        // Assert.Equal(0, runResult.ExitCode);
+        Assert.Equal("", runResult.StandardError);
+        string[] lines = runResult.StandardOutput.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        Assert.Equal(5, lines.Length);
+        Assert.Equal("script", lines[0]);
+        Assert.Equal("/", lines[1]);
+        Assert.Equal("errexit disabled", lines[2]);
+        Assert.Equal("dotnet", lines[3]);
+        Assert.EndsWith("/src", lines[4]);
+        Assert.Equal(1, runResult.ExitCode);
+    }
+
     [MemberData(nameof(ParamImageNameData))]
     [Theory]
     public void ParamImageName(string imageName, string[] expectedProperties)
@@ -151,7 +239,7 @@ public abstract class DotnetPublishImageTaskScriptTests : TaskScriptTests
 
         // ContainerFamily gets passed when a base image is specified.
         string? containerFamilyProp = publishCommandArgs.LastOrDefault(p => p.StartsWith("-p:ContainerFamily="))?.Substring("-p:ContainerFamily=".Length);
-        string expectedContainerFamily = string.IsNullOrEmpty(value) ? null : "";
+        string? expectedContainerFamily = string.IsNullOrEmpty(value) ? null : "";
         Assert.Equal(expectedContainerFamily, containerFamilyProp);
     }
 
